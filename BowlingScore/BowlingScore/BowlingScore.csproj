@@ -46,7 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BowlingScore.cs" />
+    <Compile Include="BowlingScorer.cs" />
     <Compile Include="Foo.cs" />
+    <Compile Include="IBowlingScorer.cs" />
+    <Compile Include="IScorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
