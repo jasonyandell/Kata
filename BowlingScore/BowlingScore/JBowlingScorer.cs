@@ -53,12 +53,36 @@ namespace BowlingScore
             }
         }
 
+        public int LastFrameIndex(string input)
+        {
+            // there will be no more than 10 frames
+            if (input.Length < 11) return input.Length;
+
+            int frameCount = 0;
+            int counter = 0;
+            for (int i = 0; i < input.Length; ++i)
+            {
+                var ch = input[i];
+
+                if ((ch == 'X') || (++counter == 2))
+                {
+                    frameCount++;
+                    counter = 0;
+                }
+
+                if (frameCount == 10) 
+                    return i+1;
+            }
+            return input.Length;
+        }
+
         public int Score(string input)
         {
             var results = new List<KeyValuePair<char, int>>();
 
             var total = 0;
-            for(int i = 0; i < input.Length; ++i)
+            var lastFrameIndex = LastFrameIndex(input);
+            for(int i = 0; i < lastFrameIndex; ++i)
             {
                 var val = Value(input, i);
                 results.Add(new KeyValuePair<char, int>(input[i], val));

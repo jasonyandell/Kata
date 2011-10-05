@@ -73,6 +73,12 @@ namespace BowlingScore
         {
             Assert.AreEqual(150, scorer.Score("5/5/5/5/5/5/5/5/5/5/5"));
         }
+
+        [TestMethod]
+        public void WebSample4()
+        {
+            Assert.AreEqual(133, scorer.Score("14456/5/X017/6/X2/6"));
+        }
     
 
     }
