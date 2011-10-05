@@ -7,5 +7,9 @@ namespace BowlingScore
 {
     public class BowlingScorer
     {
+        public int Score(string input)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

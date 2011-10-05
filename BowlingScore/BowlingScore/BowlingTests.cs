@@ -16,6 +16,13 @@ namespace BowlingScore
             var scorer = new BowlingScorer();
         }
 
+        [TestMethod]
+        public void can_score_strike()
+        {
+            var scorer = new BowlingScorer();
+            Assert.AreEqual(10, scorer.Score("X"));
+        }
+
 
     }
 }
