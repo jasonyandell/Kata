@@ -54,20 +54,20 @@ namespace BowlingScore
             if (frame != string.Empty)
                 frames.Add(frame);
 
-            return frames.Select(f => ScoreFrame(f)).Sum();
+            return frames.Select(f => ScoreFrame(f, 0)).Sum();
         }
 
-        public static int ScoreFrame(string input)
+        public static int ScoreFrame(string input, int tally)
         {
             if (string.IsNullOrEmpty(input)) return 0;
             char t = input[0];
             if (char.ToUpper(t) == 'X') {
                 return 10;
             } else if (char.ToUpper(t) == '/') {
-                return 10;
+                return 10 - tally;
             } else {
                 int score = (int)Char.GetNumericValue(t);
-                score += ScoreFrame(input.Substring(1));
+                score += ScoreFrame(input.Substring(1), score);
                 return score;
             }
         }
