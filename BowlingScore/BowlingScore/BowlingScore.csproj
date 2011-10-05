@@ -50,7 +50,6 @@
     <Compile Include="BowlingTestsCourt.cs" />
     <Compile Include="BowlingTestsJason.cs" />
     <Compile Include="JBowlingScorer.cs" />
-    <Compile Include="Foo.cs" />
     <Compile Include="IBowlingScorer.cs" />
     <Compile Include="IScorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
