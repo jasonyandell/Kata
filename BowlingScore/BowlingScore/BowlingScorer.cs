@@ -7,67 +7,65 @@ namespace BowlingScore
 {
     public class BowlingScorer : IBowlingScorer
     {
-        /*
-        protected string input;
-        protected int[] scores = new int[10];
-
-        protected IEnumerable<char[]> FrameScores
+        class Frame
         {
-            get {
-                int s = 0;
-                char[] frame = new char[3];
-                for (int f = 0; f < input.Length; f++) {
-                    frame[s] = input[f];
-                    if (frame[s]
-                }
-            }
+            public string input = string.Empty;
+            public int weight = 1;
         }
 
         public int Score(string input)
         {
-            char t = input[0];
-
-            if (char.ToUpper(t) != 'X') 
-
-            string frame = string.Format("{0}", t, );
-        }
-
-        public int ScoreFrame()
-        {
-            return 0;
-        }
-         */
-
-        public int Score(string input)
-        {
-            List<string> frames = new List<string>();
+            List<Frame> frames = new List<Frame>();
             string frame = string.Empty;
+            int frameIndex = 0;
+
+            Action<string> addFrameDelegate = frameInput => {
+                frames.Add(new Frame { input = frameInput });
+                frame = string.Empty;
+                frameIndex++;
+            };
+
+            Action<int> incrementWeight = offset => frames[offset].weight++;
+
+            Stack<Action> incrementWeights = new Stack<Action>();
 
             for (int f = 0; f < input.Length; f++) {
                 char t = input[f];
                 frame += t;
-                if (char.ToUpper(t) == 'X' || char.ToUpper(t) == '/') {
-                    frames.Add(frame);
-                    frame = string.Empty;
+                if (char.ToUpper(t) == 'X') {
+                    int baseIndex = frameIndex;
+                    addFrameDelegate(frame);
+                    incrementWeights.Push(() => incrementWeight(baseIndex + 1));
+                    incrementWeights.Push(() => incrementWeight(baseIndex + 2));
+                } else if (char.ToUpper(t) == '/') {
+                    int baseIndex = frameIndex;
+                    addFrameDelegate(frame);
+                    incrementWeights.Push(() => incrementWeight(baseIndex + 1));
+                } else if (t == '-') {
+                    addFrameDelegate(frame);
                 }
             }
             if (frame != string.Empty)
-                frames.Add(frame);
+                addFrameDelegate(frame);
 
-            return frames.Select(f => ScoreFrame(f)).Sum();
+            while (incrementWeights.Count > 0) { incrementWeights.Pop()(); }
+
+            return frames.Select(f => f.weight * ScoreFrame(f.input, 0)).Sum();
         }
 
-        public static int ScoreFrame(string input)
+        public static int ScoreFrame(string input, int tally)
         {
             if (string.IsNullOrEmpty(input)) return 0;
             char t = input[0];
-            if (char.ToUpper(t) == 'X') {
+            if (t == '-') {
+                return 0;
+            } else if (char.ToUpper(t) == 'X') {
                 return 10;
             } else if (char.ToUpper(t) == '/') {
-                return 10;
+                return 10 - tally;
             } else {
                 int score = (int)Char.GetNumericValue(t);
-                score += ScoreFrame(input.Substring(1));
+                score += ScoreFrame(input.Substring(1), score);
                 return score;
             }
         }
