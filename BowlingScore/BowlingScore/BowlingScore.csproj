@@ -45,7 +45,6 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BowlingScore.cs" />
     <Compile Include="BowlingScorer.cs" />
     <Compile Include="BowlingTests.cs" />
     <Compile Include="Foo.cs" />
