@@ -47,6 +47,8 @@
   <ItemGroup>
     <Compile Include="BowlingScore.cs" />
     <Compile Include="BowlingScorer.cs" />
+    <Compile Include="BowlingTests.cs" />
+    <Compile Include="BowlingScorer.cs" />
     <Compile Include="Foo.cs" />
     <Compile Include="IBowlingScorer.cs" />
     <Compile Include="IScorer.cs" />
