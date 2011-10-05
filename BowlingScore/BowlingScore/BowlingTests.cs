@@ -21,6 +21,12 @@ namespace BowlingScore
         }
 
         [TestMethod]
+        public void can_score_frame_with_gutter()
+        {
+            Assert.AreEqual(5, scorer.Score("5-"));
+        }
+
+        [TestMethod]
         public void can_score_spare_as_a_single_frame()
         {
             Assert.AreEqual(10, scorer.Score("5/"));
@@ -35,7 +41,7 @@ namespace BowlingScore
         [TestMethod]
         public void can_score_spare_mundane()
         {
-            Assert.AreEqual(10 + 2, scorer.Score("5/25"));
+            Assert.AreEqual(12 + 7, scorer.Score("5/25"));
         }
 
         [TestMethod]
@@ -49,5 +55,25 @@ namespace BowlingScore
         {
             Assert.AreEqual((10 + (5 + 5)) + (10 + 2) + 7, scorer.Score("X5/25"));
         }
+
+        [TestMethod]
+        public void WebSample1()
+        {
+            Assert.AreEqual(300, scorer.Score("XXXXXXXXXXXX"));
+        }
+
+        [TestMethod]
+        public void WebSample2()
+        {
+            Assert.AreEqual(90, scorer.Score("9-9-9-9-9-9-9-9-9-9-"));
+        }
+
+        [TestMethod]
+        public void WebSample3()
+        {
+            Assert.AreEqual(150, scorer.Score("5/5/5/5/5/5/5/5/5/5/5"));
+        }
+    
+
     }
 }
