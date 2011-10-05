@@ -8,7 +8,7 @@ namespace BowlingScore
         [TestInitialize]
         public override void TestInitialize()
         {
-            scorer = new BowlingScorer();
+            scorer = new JBowlingScorer();
         }
         
     }
