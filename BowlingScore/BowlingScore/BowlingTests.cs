@@ -80,6 +80,11 @@ namespace BowlingScore
             Assert.AreEqual(133, scorer.Score("14456/5/X017/6/X2/6"));
         }
     
+        [TestMethod]
+        public void WebSample5()
+        {
+            Assert.AreEqual(184, scorer.Score("45X5/XXX450/81XX6"));
+        }
 
     }
 }
