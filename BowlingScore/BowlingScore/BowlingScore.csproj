@@ -45,8 +45,14 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BowlingScorer.cs" />
+    <Compile Include="BowlingTests.cs" />
+    <Compile Include="BowlingTestsCourt.cs" />
+    <Compile Include="BowlingTestsJason.cs" />
+    <Compile Include="JBowlingScorer.cs" />
+    <Compile Include="IBowlingScorer.cs" />
+    <Compile Include="IScorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnitTest1.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
