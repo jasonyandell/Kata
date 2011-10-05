@@ -4,28 +4,40 @@ module BowlingScore.FSharp
 
 let Score (s : string) =     
     let rec MakeString (a : char list) =
-        match a with
-        | x::[] -> x.ToString()
-        | x::xs -> x.ToString() + MakeString(xs)
-        | [] -> ""        
+        System.String.Concat(a |> Array.ofList)
 
-    let rec Score (s : string) (index : int) = 
+    let rec Score (l : char list) (index : int) = 
+        let s = MakeString l
         match s.Chars(index) with
         | 'X' -> 10 
         | '-' -> 0
-        | '/' -> 10 - (Score s (index-1))
+        | '/' -> 
+            10 - (Score l (index-1))
         | x when x>='0' && x<='9' -> System.Int32.Parse(x.ToString())
-        | _ -> failwith "bad arg"
+        | _ -> failwith ("bad arg: " + s)
 
-    let rec ScoreList = function
-        | 'X'::a::b::xs when s = MakeString([a;b]) -> 10 + (Score s 0) + (Score s 1) + (ScoreList (a::b::xs))
-        | 'X'::a::[] when (s = MakeString([a])) -> 10 + (Score s 0)
-        | 'X'::[] -> 10
-        | a::'/'::b::xs when s = MakeString([b]) -> 10 + (Score s 0) + ScoreList (b::xs)
-        | a::'/'::[] -> 10
-        | a::xs when s = MakeString([a]) -> (Score s 0) + ScoreList xs
+    let rec ScoreList (l : char list) = 
+        ()
+        match l with
+        | 'X'::a::b::[] -> 
+            10 + (Score [a] 0) + (Score [b] 0)
+        | 'X'::a::[] -> 
+            10 + (Score [a] 0)
+        | 'X'::a::b::xs -> 
+            10 + (Score [a;b] 0) + (Score [a;b] 1) + (ScoreList (a::b::xs))
+        | 'X'::[] -> 
+            10
+        | a::'/'::b::[] -> 
+            10 + (Score [b] 0)
+        | a::'/'::b::xs -> 
+            10 + (Score [b] 0) + ScoreList (b::xs)
+        | a::'/'::[] -> 
+            10
+        | a::b::xs -> 
+            (Score [a] 0) + (Score [b] 0) + ScoreList xs
+        | [a] -> 
+            Score [a] 0
         | [] -> 0
-        | _ -> failwith "bad list"
 
     s.ToCharArray() |> Array.toList |> ScoreList
 

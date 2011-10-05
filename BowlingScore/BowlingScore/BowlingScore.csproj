@@ -49,10 +49,18 @@
     <Compile Include="BowlingTests.cs" />
     <Compile Include="BowlingTestsCourt.cs" />
     <Compile Include="BowlingTestsJason.cs" />
+    <Compile Include="BowlingTestsFSharp.cs" />
+    <Compile Include="FSharpBowlingScorer.cs" />
     <Compile Include="JBowlingScorer.cs" />
     <Compile Include="IBowlingScorer.cs" />
     <Compile Include="IScorer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FSharpBowling\FSharpBowling.fsproj">
+      <Project>{6B8AC2FA-FF41-4EA3-816D-21C29CFE3E51}</Project>
+      <Name>FSharpBowling</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
