@@ -13,7 +13,3 @@ type ``Given a parser`` ()=
     [<Test>] member test.
      ``can find the greatest score`` ()=
         (ProblemEighteen.Triangle(input)).Solve |> should equal 7273
-
-    [<Test>] member test.
-     ``can count natural numbers`` ()=
-        [0;1;2] |> should equal (ProblemSixtySeven.Parser.fakeLoop |> Seq.take 3)

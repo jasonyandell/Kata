@@ -5,22 +5,14 @@ open System
 
 // issue is parsing the big text file into an array2D
 type Parser = 
-    static member fakeLoop =
-        let rec countingNumbers n = 
-             seq {
-                yield n
-                yield! countingNumbers (n+1)
-            }
-        countingNumbers 0
-
 
     static member parseInput:int [,] = 
         use reader = new StreamReader("input.txt")
-        let separator = [|' '|]
+        let separator = [|"\",\""|]
         let stringLineSeq = seq {
             while not reader.EndOfStream do
                 let line = reader.ReadLine()
-                let tokens = line.Split(separator)
+                let tokens = line.Split(separator, StringSplitOptions.None)
                 let numbers = tokens |> Array.map Convert.ToInt32
                 yield numbers
         } 
