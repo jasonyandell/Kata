@@ -5,6 +5,15 @@ open System
 
 // issue is parsing the big text file into an array2D
 type Parser = 
+    static member fakeLoop =
+        let rec countingNumbers n = 
+             seq {
+                yield n
+                yield! countingNumbers (n+1)
+            }
+        countingNumbers 0
+
+
     static member parseInput:int [,] = 
         use reader = new StreamReader("input.txt")
         let separator = [|' '|]
