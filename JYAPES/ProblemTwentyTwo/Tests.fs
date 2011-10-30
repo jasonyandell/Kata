@@ -22,5 +22,5 @@ type ``Problem Twenty Two: Scoring Names`` ()=
         ns.[938] |> should equal "COLIN"
 
     [<Test>] member test.
-     ``answer is 0`` ()=
+     ``answer is 871198282`` ()=
         ProblemTwentyTwo.Answer |> should equal 871198282

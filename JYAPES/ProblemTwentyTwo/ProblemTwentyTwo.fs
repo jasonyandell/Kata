@@ -28,8 +28,10 @@ type ProblemTwentyTwo =
         name.ToCharArray() |> Array.fold (fun sum (ch:char) -> sum + ProblemTwentyTwo.Lookup.[ch]) 0
 
     static member Answer = 
-        ProblemTwentyTwo.Names 
+        (ProblemTwentyTwo.Names 
             |> Array.fold 
                 (fun (idx,sum) name -> 
                     (idx+1, sum + idx*(ProblemTwentyTwo.Score name))) 
-                (0, 0)
+                (0, 0))
+            |> snd
+        

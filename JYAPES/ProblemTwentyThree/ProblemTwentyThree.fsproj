@@ -5,12 +5,12 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9d0fd7b8-5fd0-4b85-84a6-06f0803e64bf}</ProjectGuid>
+    <ProjectGuid>{194d32db-be05-42bf-96f2-e2c7b25781c6}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>ProblemTwentyOne</RootNamespace>
-    <AssemblyName>ProblemTwentyOne</AssemblyName>
+    <RootNamespace>ProblemTwentyThree</RootNamespace>
+    <AssemblyName>ProblemTwentyThree</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>ProblemTwentyOne</Name>
+    <Name>ProblemTwentyThree</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,7 +20,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\ProblemTwentyOne.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\ProblemTwentyThree.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,8 +29,16 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\ProblemTwentyOne.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\ProblemTwentyThree.XML</DocumentationFile>
   </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <ItemGroup>
+    <Compile Include="ProblemTwentyOne.fs" />
+    <Compile Include="Tests.fs" />
+    <None Include="packages.config" />
+    <Compile Include="FsUnitSample.fs" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="FsUnit.NUnit-0.9.0">
       <HintPath>..\packages\FsUnit.0.9.1\Lib\FsUnit.NUnit-0.9.0.dll</HintPath>
@@ -54,20 +62,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ProblemTwentyOne.fs" />
-    <Compile Include="Tests.fs" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EulerCore\EulerCore.fsproj">
-      <Name>EulerCore</Name>
-      <Project>{088b0cbd-a7a1-4b5a-8512-ec1130940454}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

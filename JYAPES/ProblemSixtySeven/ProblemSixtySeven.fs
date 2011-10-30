@@ -8,7 +8,7 @@ type Parser =
 
     static member parseInput:int [,] = 
         use reader = new StreamReader("input.txt")
-        let separator = [|"\",\""|]
+        let separator = [|" "|]
         let stringLineSeq = seq {
             while not reader.EndOfStream do
                 let line = reader.ReadLine()
