@@ -21,7 +21,7 @@ type ``Problem Twenty Three: Abundant Numbers`` ()=
 
     [<Test>] member test.
      ``Can compute list of all sums of two abundant numbers`` ()=        
-        Helpers.abundantNumbersLessThan 28123 |> should contain 6
+        Helpers.abundantNumbersLessThan 28123 |> should contain 30
 
     [<Test>] member test.
      ``Can find the answer`` ()=        

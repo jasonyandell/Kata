@@ -34,12 +34,11 @@ module Helpers =
 
         sums
 
-//        let result = 
-//            sums 
-//            |> Seq.filter inRange
-//            |> Seq.toArray
-//
-//        result
+    let hashAsList (h:hash) : int array =          
+        let result = 
+            h 
+            |> Seq.toArray
+        result
 
     let invertNumericSetUpToX max (set:hash) =
         let h = new hash()
