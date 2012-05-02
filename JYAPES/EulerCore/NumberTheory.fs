@@ -37,3 +37,10 @@ module NumberTheory =
     let inline IsPerfect (a:^a) = (d(a) = a)
     let inline IsAbundant (a:^a) = (d(a) > a)
     let inline IsDeficient (a:^a) = (d(a) < a)
+
+    let rec Digits n = 
+        match n with
+        | x when x < 10 -> [x]
+        | x -> (Digits (x / 10)) @ (Digits (x % 10))
+                
+         
