@@ -22,19 +22,40 @@ type BoardProcessor  =
     static member AsMoves (board:Board) =
         let model = board |> BoardProcessor.AsModel
         let moves = seq {
-            for r in [0..8] do 
-                for c in [0..8] do 
-                    match board.Digit r c with
-                    | Some x -> yield ( (r,c), model.[r,c].Moves )
-                    | None -> ()
+            for r in 0..8 do
+                for c in 0..8 do
+                    let retVal = ( (r,c), model.[r,c].Moves )
+                    let somethingAlreadyPlayedThere = 
+                        match board.Digit r c with
+                        | Some x -> false
+                        | None -> true
+                    if somethingAlreadyPlayedThere then
+                        yield retVal
         }
         
-        let a = 
-            moves 
-            |> Seq.toArray
-        let b = 
-            a |> Seq.groupBy (fun ( (r,c), moves ) -> moves.Constraints.Count)
-        let c = 
-            b |> Map.ofSeq
+        let a = moves |> Seq.toArray
+        let b = a |> Seq.groupBy (fun ( (r,c), moves ) -> moves.Constraints.Count)
+        let c =  b |> Map.ofSeq
 
         c
+
+    static member Print (board:Board) =
+        let text = BoardProcessor.AsText(board)
+        let output = [|
+            for row in 0..8 do
+                if row>0 && row%3=0 then
+                    for i in 0..21 do
+                        yield '-'
+                    yield '\n'
+                for col in 0..8 do
+                    if col>0 && (col%3=0) then 
+                        yield '|'
+                        yield ' ' 
+                    let row = text.[row,col]
+                    yield row.[0]
+                    yield ' '
+                yield '\n'
+        |]
+        let sb = new System.Text.StringBuilder()
+        sb.Append(output) |> ignore
+        sb.ToString()        

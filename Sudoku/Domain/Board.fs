@@ -1,6 +1,4 @@
-﻿// Learn more about F# at http://fsharp.net
-
-namespace Domain
+﻿namespace Domain
 
 open Microsoft.FSharp.Collections
 
@@ -86,12 +84,3 @@ type Board (rowHouses:Houses, columnHouses:Houses, boxHouses:Houses, rawBoard:Ra
         (not ((this.RowHouse row).Constraints.Contains digit)) && 
         (not ((this.ColumnHouse col).Constraints.Contains digit)) &&
         (not ((this.BoxHouse row col).Constraints.Contains digit))
-
-
-// row houses
-// column houses
-// box houses
-// matrix of digit option
-
-// 
-

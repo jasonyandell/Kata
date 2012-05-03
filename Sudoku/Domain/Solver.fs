@@ -3,7 +3,9 @@
 type Solver () =
     let rec makeMoves board moves =
         Seq.fold 
-            (fun (oldBoard:Board) ((r,c),(house:House)) -> oldBoard.PlayAt r c house.Constraints.MinimumElement)
+            (fun (oldBoard:Board) ((r,c),(house:House)) -> 
+                let digit = house.Constraints.MinimumElement
+                oldBoard.PlayAt digit r c)
             board
             moves
 
@@ -11,7 +13,10 @@ type Solver () =
         seq {
             match house with
             | x when house.IsEmpty -> yield! Seq.empty
-            | x -> yield! seq { for digit in house.Constraints -> ( (r,c), digit ) }
+            | x -> yield! seq { 
+                for digit in house.Constraints -> 
+                    ( (r,c), digit ) 
+                }
         }
 
     let getAllMoves allMoves = 

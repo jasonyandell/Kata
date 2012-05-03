@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Domain;
@@ -53,8 +54,22 @@ namespace Tests
         [Then("solve it")]
         public void SolveIt()
         {
-            var solution = Solver.Solve(_board).Take(1).ToList()[0];
-            var output = BoardProcessor.AsText(solution);
+            var watch = new Stopwatch();
+            watch.Start();
+
+            int i = 0;
+            var solutions = Solver.Solve(_board).AsParallel();
+            foreach (var solution in Solver.Solve(_board))
+            {
+                i++;
+                if (i % 1000 == 0)
+                {
+                    var text = BoardProcessor.Print(solution);
+                    var time = watch.ElapsedMilliseconds*1.0/1000.0;
+                    if (i%1000 == 0) Debug.WriteLine("{0} boards in {1} seconds. Average: {2} boards/sec", ++i, time, i*1.0/time);
+                    if (i%100000 == 0) Debug.WriteLine(text);
+                }
+            }
         }
     }
 }
