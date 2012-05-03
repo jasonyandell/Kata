@@ -57,18 +57,21 @@ namespace Tests
             var watch = new Stopwatch();
             watch.Start();
 
-            int i = 0;
-            var solutions = Solver.Solve(_board).AsParallel();
+            var split = new Stopwatch();
+            split.Start();
+
+            int i = 0,last = 0;
             foreach (var solution in Solver.Solve(_board))
             {
                 i++;
-                if (i % 1000 == 0)
-                {
-                    var text = BoardProcessor.Print(solution);
-                    var time = watch.ElapsedMilliseconds*1.0/1000.0;
-                    if (i%1000 == 0) Debug.WriteLine("{0} boards in {1} seconds. Average: {2} boards/sec", ++i, time, i*1.0/time);
-                    if (i%100000 == 0) Debug.WriteLine(text);
-                }
+                if (i%1000 != 0) continue;
+                split.Stop();
+                var time = split.ElapsedMilliseconds*1.0/1000.0;
+                Debug.WriteLine("{0} boards / {1} seconds. Avg: {2}", i-last,
+                                time, (i-last)*1.0/time);
+                if (i % 10000 == 0) Debug.WriteLine(BoardProcessor.Print(solution));
+                last = i;
+                split.Restart();
             }
         }
     }

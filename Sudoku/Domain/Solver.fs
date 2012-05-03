@@ -1,57 +1,36 @@
 ﻿namespace Domain
 
+open Microsoft.FSharp.Collections
+open System.Threading.Tasks
+
 type Solver () =
-    let rec makeMoves board moves =
-        Seq.fold 
-            (fun (oldBoard:Board) ((r,c),(house:House)) -> 
-                let digit = house.Constraints.MinimumElement
-                oldBoard.PlayAt digit r c)
+    let rec applyMoves board moves =
+        Seq.fold  (fun (oldBoard:Board) ((r,c),digit) -> oldBoard.PlayAt digit r c)
             board
             moves
 
-    let getMoves ( (r,c), (house:House) ) =
-        seq {
-            match house with
-            | x when house.IsEmpty -> yield! Seq.empty
-            | x -> yield! seq { 
-                for digit in house.Constraints -> 
-                    ( (r,c), digit ) 
-                }
-        }
-
-    let getAllMoves allMoves = 
-        seq { for ((r:int,c:int),house:House) in allMoves do yield! getMoves ((r,c),house) }
-
-    let getAllMovesInConstraintLengthOrder (moves:Map<int,'a>) = 
-        seq { 
-            for m in moves do 
-                let length = m.Key
-                let moveList = m.Value
-
-                if length<2 then ()
-                else yield! getAllMoves moveList 
-        }
-
     let rec allSolutions (board:Board) = 
-        let moves = board |> BoardProcessor.AsMoves
-
         // recurse, trying every remaining move, 
         seq {
+            if board.DigitsPlayed=81 then yield board
+
+            let moves = board |> BoardProcessor.AsMoves
             match moves with 
-            // if there are no moves, we have a solution, yield it
-            | x when Map.isEmpty moves ->
-                yield board
             // if there are any places we cannot move, this is a bad board.  Bail.
             | x when Map.containsKey 0 moves -> 
                 yield! Seq.empty
             // if there are any moves we are forced to make, make them all, solve the result           
             | x when Map.containsKey 1 moves ->
-                let newBoard = makeMoves board moves.[1]
+                let newBoard = applyMoves board moves.[1]
                 yield! allSolutions newBoard
             // now we have all optional moves
             | x -> 
-                let nextMoves:seq<(int*int)*int> = getAllMovesInConstraintLengthOrder moves
-                yield! seq { for ((r,c),digit) in nextMoves do yield! allSolutions (board.PlayAt digit r c) }
+                for entry in moves do
+                    let choiceCount = entry.Key
+                    let movesWithNChoices = entry.Value
+                    let boards = 
+                        seq { for ((r,c),digit) in movesWithNChoices -> board.PlayAt digit r c }
+                    for b in boards do yield! allSolutions b
         }
 
     member private x.AllSolutions (board:Board) = 

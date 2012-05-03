@@ -1,6 +1,6 @@
 ﻿namespace Domain
 
-type SudokuDatapoint = { Digit:string; Moves:House }
+type SudokuDatapoint = { Digit:string; Moves:Set<int> }
 
 type BoardProcessor  =
     static member private fromBoard (board:Board) r c = 
@@ -9,7 +9,7 @@ type BoardProcessor  =
             | Some x -> x.ToString()
             | None -> "."
         let constraints = House.unionMany [| board.RowHouse r; board.ColumnHouse c; board.BoxHouse r c |]
-        let moves = new House(Set.difference Board.AllDigits constraints.Constraints)
+        let moves = Set.difference Board.AllDigits constraints.Constraints
         { Digit = digit; Moves = moves }
 
     static member AsModel (board:Board) = 
@@ -20,24 +20,34 @@ type BoardProcessor  =
         Array2D.mapi (fun x y item -> item.Digit) model
     
     static member AsMoves (board:Board) =
+
+        let getMoves ( (r,c), (house:Set<int>) ) =
+            [| for digit in house -> ( (r,c), digit ) |]
+
+        let getAllMoves allMoves = 
+            allMoves 
+            |> Seq.map getMoves
+            |> Seq.concat 
+//            |> Seq.toArray
+
         let model = board |> BoardProcessor.AsModel
         let moves = seq {
             for r in 0..8 do
                 for c in 0..8 do
-                    let retVal = ( (r,c), model.[r,c].Moves )
                     let somethingAlreadyPlayedThere = 
                         match board.Digit r c with
                         | Some x -> false
                         | None -> true
                     if somethingAlreadyPlayedThere then
-                        yield retVal
+                        yield ( (r,c), model.[r,c].Moves )
         }
         
-        let a = moves |> Seq.toArray
-        let b = a |> Seq.groupBy (fun ( (r,c), moves ) -> moves.Constraints.Count)
-        let c =  b |> Map.ofSeq
+        let a = moves
+        let b = a |> Seq.groupBy (fun ( (r,c), moves ) -> moves.Count)  
+        let c = b |> Map.ofSeq
+        let d = c |> Map.map (fun len choices -> choices |> getAllMoves |> Seq.toArray)
 
-        c
+        d
 
     static member Print (board:Board) =
         let text = BoardProcessor.AsText(board)

@@ -16,12 +16,14 @@ type Houses = Map<int,House>
 
 type RawBoard = int option [,]
 
-type Board (rowHouses:Houses, columnHouses:Houses, boxHouses:Houses, rawBoard:RawBoard)=
+type Board (rowHouses:Houses, columnHouses:Houses, boxHouses:Houses, rawBoard:RawBoard, digitsPlayed:int)=
     let boxIndex (row:int) (col:int) = (col/3)*10+(row/3)
 
     static member AllDigits = [1..9] |> Set.ofList
 
-    static member Empty () = new Board(Map.empty,Map.empty,Map.empty,Array2D.create<int option> 9 9 None)
+    static member Empty () = new Board(Map.empty,Map.empty,Map.empty,Array2D.create<int option> 9 9 None,0)
+
+    member this.DigitsPlayed = digitsPlayed
 
     member this.Digit (row:int) (col:int) = 
         rawBoard.[col,row]
@@ -64,7 +66,7 @@ type Board (rowHouses:Houses, columnHouses:Houses, boxHouses:Houses, rawBoard:Ra
         let newBoard = Array2D.copy rawBoard
         newBoard.[col,row] <- Some digit
 
-        new Board(newRows, newCols, newBoxes, newBoard)
+        new Board(newRows, newCols, newBoxes, newBoard,digitsPlayed+1)
 
     member this.ValidDigits (row:int) (col:int) = 
         let constraints = 
