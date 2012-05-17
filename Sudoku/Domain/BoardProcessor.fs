@@ -4,6 +4,9 @@
 
 type BoardProcessor (board:Board) =
 
+    let positionsByDigit (area:Set<Position>) : Map<int<sd>,Set<Position>> = 
+        ``this is the place to start working``
+
     let housesByPosition =         
         // for each position on the board, get the house
         let housesByPosition' = 
