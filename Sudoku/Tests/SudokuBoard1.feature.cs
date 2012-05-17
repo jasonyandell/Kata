@@ -66,42 +66,6 @@ namespace Tests
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Row constraint")]
-        [NUnit.Framework.TestCaseAttribute("1", "2", "3", new string[0])]
-        public virtual void RowConstraint(string digit, string row, string column, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Row constraint", exampleTags);
-#line 6
-this.ScenarioSetup(scenarioInfo);
-#line 7
- testRunner.Given("an empty board");
-#line 8
- testRunner.When(string.Format("a {0} placed at {1}, {2}", digit, row, column));
-#line 9
- testRunner.Then(string.Format("RowHouse({0}) should have a constraint against {1}", row, digit));
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Column constraint")]
-        [NUnit.Framework.TestCaseAttribute("1", "2", "3", new string[0])]
-        public virtual void ColumnConstraint(string digit, string row, string column, string[] exampleTags)
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Column constraint", exampleTags);
-#line 14
-this.ScenarioSetup(scenarioInfo);
-#line 15
- testRunner.Given("an empty board");
-#line 16
- testRunner.When(string.Format("a {0} placed at {1}, {2}", digit, row, column));
-#line 17
- testRunner.Then(string.Format("ColumnHouse({0}) should have a constraint against {1}", column, digit));
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
         [NUnit.Framework.DescriptionAttribute("Box constraint")]
         [NUnit.Framework.TestCaseAttribute("1", "0", "0", "0", "0", new string[0])]
         [NUnit.Framework.TestCaseAttribute("1", "2", "2", "0", "0", new string[0])]
@@ -113,14 +77,14 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void BoxConstraint(string digit, string row, string column, string otherRow, string otherCol, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Box constraint", exampleTags);
-#line 22
+#line 6
  this.ScenarioSetup(scenarioInfo);
-#line 23
+#line 7
  testRunner.Given("an empty board");
-#line 24
+#line 8
  testRunner.When(string.Format("a {0} placed at {1}, {2}", digit, row, column));
-#line 25
- testRunner.Then(string.Format("BoxHouse({0},{1}) should also have a constraint against {2}", otherRow, otherCol, digit));
+#line 9
+ testRunner.Then(string.Format("cannot play {0} at {1},{2}", digit, otherRow, otherCol));
 #line hidden
             this.ScenarioCleanup();
         }
@@ -139,13 +103,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void CannotMoveInTheSamePlaceTwice(string digit, string row, string column, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Cannot move in the same place twice", exampleTags);
-#line 36
+#line 20
 this.ScenarioSetup(scenarioInfo);
-#line 37
+#line 21
  testRunner.Given("an empty board");
-#line 38
+#line 22
  testRunner.When(string.Format("a 1 placed at {0}, {1}", row, column));
-#line 39
+#line 23
  testRunner.Then(string.Format("cannot play {0} at {1}, {2}", digit, row, column));
 #line hidden
             this.ScenarioCleanup();
@@ -165,13 +129,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void CannotPlaceADigitInTheSameRowTwice(string row, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Cannot place a digit in the same row twice", exampleTags);
-#line 52
+#line 36
 this.ScenarioSetup(scenarioInfo);
-#line 53
+#line 37
  testRunner.Given("an empty board");
-#line 54
+#line 38
  testRunner.When("a 1 placed at 1, 1");
-#line 55
+#line 39
  testRunner.Then(string.Format("cannot play 1 at {0}, 1", row));
 #line hidden
             this.ScenarioCleanup();
@@ -191,13 +155,13 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void CannotPlaceADigitInTheSameColumnTwice(string column, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Cannot place a digit in the same column twice", exampleTags);
-#line 68
+#line 52
 this.ScenarioSetup(scenarioInfo);
-#line 69
+#line 53
  testRunner.Given("an empty board");
-#line 70
+#line 54
  testRunner.When("a 1 placed at 1, 1");
-#line 71
+#line 55
  testRunner.Then(string.Format("cannot play 1 at 1, {0}", column));
 #line hidden
             this.ScenarioCleanup();
@@ -208,11 +172,59 @@ this.ScenarioSetup(scenarioInfo);
         public virtual void SolveEmptyBoard()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve empty board", ((string[])(null)));
-#line 84
+#line 68
 this.ScenarioSetup(scenarioInfo);
-#line 85
+#line 69
  testRunner.Given("an empty board");
-#line 86
+#line 70
+ testRunner.Then("solve it");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Solve a difficult board")]
+        public virtual void SolveADifficultBoard()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve a difficult board", ((string[])(null)));
+#line 72
+this.ScenarioSetup(scenarioInfo);
+#line 73
+ testRunner.Given("a difficult board");
+#line 74
+ testRunner.Then("solve it");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Solve a board from project Euler")]
+        public virtual void SolveABoardFromProjectEuler()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve a board from project Euler", ((string[])(null)));
+#line 76
+this.ScenarioSetup(scenarioInfo);
+#line 77
+ testRunner.Given("an example Euler board");
+#line 78
+ testRunner.Then("solve it");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Can take board input from scenario file")]
+        public virtual void CanTakeBoardInputFromScenarioFile()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Can take board input from scenario file", ((string[])(null)));
+#line 80
+this.ScenarioSetup(scenarioInfo);
+#line hidden
+#line 81
+ testRunner.Given("this board", "4 . . . . . 8 . 5\r\n. 3 . . . . . . .\r\n. . . 7 . . . . .\r\n. 2 . . . . . 6 .\r\n. . ." +
+                    " . 8 . 4 . .\r\n. 4 . . 1 . . . .\r\n. . . 6 . 3 . 7 .\r\n5 . 3 2 . . . . .\r\n1 . 4 . ." +
+                    " . . . .", ((TechTalk.SpecFlow.Table)(null)));
+#line 93
  testRunner.Then("solve it");
 #line hidden
             this.ScenarioCleanup();

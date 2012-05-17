@@ -3,26 +3,10 @@
 	As an user of the Board class
 	I want the proper constraints to be mapped
 
-Scenario Outline: Row constraint
-	Given an empty board
-	When a <digit> placed at <row>, <column>
-	Then RowHouse(<row>) should have a constraint against <digit>
-Examples:
-| digit | row | column | 
-| 1     | 2   | 3      |
-
-Scenario Outline: Column constraint
-	Given an empty board
-	When a <digit> placed at <row>, <column>
-	Then ColumnHouse(<column>) should have a constraint against <digit>
-Examples:
-| digit | row | column |
-| 1     | 2   | 3      |
-
  Scenario Outline: Box constraint
 	Given an empty board
 	When a <digit> placed at <row>, <column>
-	Then BoxHouse(<otherRow>,<otherCol>) should also have a constraint against <digit>
+	Then cannot play <digit> at <otherRow>,<otherCol>
 Examples:
 | digit | row | column | otherRow | otherCol |
 | 1     | 0   | 0      | 0        | 0        |
@@ -85,20 +69,26 @@ Scenario: Solve empty board
 	Given an empty board
 	Then solve it
 
+Scenario: Solve a difficult board
+	Given a difficult board
+	Then solve it
 
-#Scenario Outline: A board
-#	Given an empty board
-#	When importing <board>
-#	Then can solve it
-#Examples:
-#| board             |
-#| 4 . . . . . 8 . 5 |
-#| . 3 . . . . . . . |
-#| . . . 7 . . . . . |
-#| . 2 . . . . . 6 . |
-#| . . . . 8 . 4 . . |
-#| . . . . 1 . . . . |
-#| . . . 6 . 3 . 7 . |
-#| 5 . . 2 . . . . . |
-#| 1 . 4 . . . . . . |
+Scenario: Solve a board from project Euler
+	Given an example Euler board
+	Then solve it
+
+Scenario: Can take board input from scenario file
+	Given this board
+	"""
+4 . . . . . 8 . 5
+. 3 . . . . . . .
+. . . 7 . . . . .
+. 2 . . . . . 6 .
+. . . . 8 . 4 . .
+. 4 . . 1 . . . .
+. . . 6 . 3 . 7 .
+5 . 3 2 . . . . .
+1 . 4 . . . . . .
+	"""
+	Then solve it
 

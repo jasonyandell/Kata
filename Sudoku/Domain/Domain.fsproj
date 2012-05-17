@@ -49,11 +49,14 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Board.fs" />
-    <None Include="Script.fsx" />
     <None Include="App.config" />
+    <Compile Include="Datapoint.fs" />
+    <Compile Include="Board.fs" />
+    <Compile Include="Printer.fs" />
+    <Compile Include="House.fs" />
     <Compile Include="BoardProcessor.fs" />
     <Compile Include="Solver.fs" />
+    <Compile Include="BoardExtensions.fs" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

@@ -1,71 +1,118 @@
 ﻿namespace Domain
 
-type SudokuDatapoint = { Digit:string; Moves:Set<int> }
 
-type BoardProcessor  =
-    static member private fromBoard (board:Board) r c = 
-        let digit = 
-            match board.Digit r c with
-            | Some x -> x.ToString()
-            | None -> "."
-        let constraints = House.unionMany [| board.RowHouse r; board.ColumnHouse c; board.BoxHouse r c |]
-        let moves = Set.difference Board.AllDigits constraints.Constraints
-        { Digit = digit; Moves = moves }
+type Index () = 
+    static let to_sc x = x*1<sc>
+    static let to_sr x = x*1<sr>
 
-    static member AsModel (board:Board) = 
-        Array2D.init 9 9 (BoardProcessor.fromBoard board)
+    static let columnIndexes = [0..8] |> Seq.map to_sc
+    static let rowIndexes = [0..8] |> Seq.map to_sr
 
-    static member AsText (board:Board) = 
-        let model = board |> BoardProcessor.AsModel
-        Array2D.mapi (fun x y item -> item.Digit) model
-    
-    static member AsMoves (board:Board) =
+    static let allPositions = 
+        seq { 
+        for r in rowIndexes do 
+            for c in columnIndexes -> 
+                { Position.Row=r; Col=c} 
+        } 
+        |> Array.ofSeq
 
-        let getMoves ( (r,c), (house:Set<int>) ) =
-            [| for digit in house -> ( (r,c), digit ) |]
+    static let byColumn = 
+        seq {
+        for c in columnIndexes ->
+            (c, seq { for r in rowIndexes do yield {Position.Row=r; Col=c}})
+        } 
+        |> Map.ofSeq
 
-        let getAllMoves allMoves = 
-            allMoves 
-            |> Seq.map getMoves
-            |> Seq.concat 
-//            |> Seq.toArray
+    // TODO: Lazy,ref, Lazy-of-ref
+    static let byRow = 
+        seq {
+            for r in rowIndexes ->
+                (r, seq { for c in columnIndexes do yield {Position.Row=r; Col=c}})
+        } |> Map.ofSeq
 
-        let model = board |> BoardProcessor.AsModel
-        let moves = seq {
-            for r in 0..8 do
-                for c in 0..8 do
-                    let somethingAlreadyPlayedThere = 
-                        match board.Digit r c with
-                        | Some x -> false
-                        | None -> true
-                    if somethingAlreadyPlayedThere then
-                        yield ( (r,c), model.[r,c].Moves )
-        }
-        
-        let a = moves
-        let b = a |> Seq.groupBy (fun ( (r,c), moves ) -> moves.Count)  
-        let c = b |> Map.ofSeq
-        let d = c |> Map.map (fun len choices -> choices |> getAllMoves |> Seq.toArray)
+    static let byBox = 
+        seq {
+            let rows = Seq.filter (fun r -> r < 3<sr>) rowIndexes
+            let cols = Seq.filter (fun c -> c < 3<sc>) columnIndexes
+            for r in rows do
+                for c in cols ->
+                    let thisBox =
+                        seq { 
+                        for i in 0..2 do
+                            for j in 0..2 ->
+                                let r' = r*3 + i*1<sr>
+                                let c' = c*3 + j*1<sc>
+                                {Position.Row=r'; Col=c'}
+                        } 
 
-        d
+                    let out = 
+                        ( {Position.Row=r; Col=c}, thisBox )
+                    out
+        } |> Map.ofSeq
 
-    static member Print (board:Board) =
-        let text = BoardProcessor.AsText(board)
-        let output = [|
-            for row in 0..8 do
-                if row>0 && row%3=0 then
-                    for i in 0..21 do
-                        yield '-'
-                    yield '\n'
-                for col in 0..8 do
-                    if col>0 && (col%3=0) then 
-                        yield '|'
-                        yield ' ' 
-                    let row = text.[row,col]
-                    yield row.[0]
-                    yield ' '
-                yield '\n'
-        |]
-        let sb = new System.Text.StringBuilder()
-        sb.Append(output) |> ignore
-        sb.ToString()        
+    static member RowIndexes = rowIndexes
+    static member ColumnIndexes = columnIndexes
+    static member AllPositions = allPositions
+    static member ByRow (row:int<sr>) = byRow.Item row
+    static member ByColumn (col:int<sc>) = byColumn.Item col
+    static member ByBox (pos:Position) = 
+        let boxPos = {Position.Row=pos.Row/3;Col=pos.Col/3}
+        byBox.Item boxPos
+
+[<Measure>] type score
+
+type BoardProcessor (board:Board) =
+    let makeArea (position:Position) = 
+        let rowArea = Index.ByRow position.Row
+        let colArea = Index.ByColumn position.Col
+        let boxArea = Index.ByBox position
+        let area = Seq.concat [rowArea; colArea; boxArea]
+        area |> Set.ofSeq
+
+    let housesByPosition =         
+        // for each position on the board, get the house
+        let housesByPosition' = 
+            Index.AllPositions 
+            |> Seq.map (fun pos -> 
+                let house = new House(makeArea pos, board)
+                (pos,house))
+            |> Map.ofSeq
+        lazy housesByPosition'
+
+    let isBlank pos =
+        not (board.At pos).IsSome
+
+    let movesExist (house:House) : bool =
+        not house.AvailableDigits.IsEmpty
+
+    let isValid pos (house:House) : bool = 
+        not (isBlank pos) ||
+        (movesExist house)
+
+    let to_pos (row:int) (column:int) (digit:int) = {Row=row*1<sr>;Col=column*1<sc>}
+
+    member x.HousesByPosition = housesByPosition.Force ()
+
+    member x.House (pos:Position) : House = new House(makeArea pos, board)//x.HousesByPosition.[pos]
+
+    /// Board is valid if something can be played at every position
+    member x.Validate () : bool =
+        x.HousesByPosition |> Map.forall isValid
+
+    /// Higher score = fewer choices
+    member x.Score (position:Position) : int<score> =        
+        let raw = 9 - (x.House position).AvailableDigits.Count
+        // breakpoint = invalid board
+        1<score> * raw
+
+    member x.IsBlank (row:int) (column:int) (digit:int) =
+        isBlank (to_pos row column digit)
+
+    member x.CanPlay (row:int) (column:int) (digit:int) = 
+        let pos = to_pos row column digit
+        let blank = isBlank pos
+        let house' = x.House pos
+        let digitIsAvailable = 
+            house'.AvailableDigits.Contains(digit*1<sd>)
+        blank && digitIsAvailable
+
