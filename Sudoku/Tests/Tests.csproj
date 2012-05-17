@@ -52,6 +52,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Solver.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Solver.feature</DependentUpon>
+    </Compile>
     <Compile Include="SudokuBoard1.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -64,6 +69,10 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
+    <None Include="Solver.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>Solver.feature.cs</LastGenOutput>
+    </None>
     <None Include="SudokuBoard.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>SudokuBoard1.feature.cs</LastGenOutput>

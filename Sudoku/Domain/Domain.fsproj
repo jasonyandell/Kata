@@ -53,6 +53,7 @@
     <Compile Include="Datapoint.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="Printer.fs" />
+    <Compile Include="Index.fs" />
     <Compile Include="House.fs" />
     <Compile Include="BoardProcessor.fs" />
     <Compile Include="Solver.fs" />

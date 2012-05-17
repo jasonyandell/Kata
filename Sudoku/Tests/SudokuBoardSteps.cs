@@ -14,7 +14,8 @@ namespace Tests
     [Binding]
     public class SudokuBoardSteps
     {
-        private Domain.Board _board;
+        private Board _board;
+        private Solver _solver;
 
         [Given("an empty board")]
         public void GivenAnEmptyBoard()
@@ -152,5 +153,37 @@ namespace Tests
             //Debug.WriteLine("Complete.\n{0} solutions in {1}. Avg:{2}solutions/sec",solutionCount,ts,solutionCount*1.0/ts.TotalSeconds);
             //Debug.WriteLine(BoardProcessor.Print(sample));
         }
+
+        [When(@"the solver evaluates the board")]
+        public void TheSolverEvaluatesTheBoard()
+        {
+            _solver = new Solver(_board);            
+        }
+
+        [Then(@"I can place (.*) digits at (.*),(.*)")]
+        public void ICanPlaceNDigitsAtRowCol(int n, int row, int col)
+        {
+            var pos = new Position(row, col);
+            var playableDigits = _solver.DigitsPlayableAt(pos).ToList();
+            
+            var list = new StringBuilder();
+            list.Append("[");
+            foreach (var item in playableDigits)
+            {
+                list.Append(item);
+            }
+            list.Append("]");
+
+
+            var error = String.Format("\r\nCan play:{3} at ({2})\r\nBoard:\r\n{0}\r\nHouse({2}):\r\n{1}\r\nOptions:\r\n{4}", 
+                Printer.Print(_board), 
+                _solver.House(pos), 
+                pos,
+                list,
+                (new BoardProcessor(_board)).ToString());
+
+            Assert.AreEqual(n, playableDigits.Count(), error);
+        }
+
     }
 }
