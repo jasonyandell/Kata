@@ -4,9 +4,6 @@
 
 type BoardProcessor (board:Board) =
 
-    let positionsByDigit (area:Set<Position>) : Map<int<sd>,Set<Position>> = 
-        ``this is the place to start working``
-
     let housesByPosition =         
         // for each position on the board, get the house
         let housesByPosition' = 
@@ -29,6 +26,9 @@ type BoardProcessor (board:Board) =
 
     let to_pos (row:int) (column:int) (digit:int) = {Row=row*1<sr>;Col=column*1<sc>}
 
+    let unfilledPositions (positions:Set<Position>) = 
+        positions |> Set.filter (fun pos -> (board.At pos).IsNone)
+
     member x.HousesByPosition = housesByPosition.Force ()
 
     member x.House (pos:Position) : House = 
@@ -38,11 +38,23 @@ type BoardProcessor (board:Board) =
     member x.Validate () : bool =
         x.HousesByPosition |> Map.forall isValid
 
-    /// Higher score = fewer choices
-    member x.Score (position:Position) : int<score> =        
-        let raw = 9 - (x.House position).AvailableDigits.Count
-        // breakpoint = invalid board
-        1<score> * raw
+    /// Higher score = worse
+    member x.ScorePosition (position:Position) : int<score> =        
+        let playable = x.DigitsPlayableAt position |> Set.toArray
+        match playable with
+        | x when not (isBlank position) -> System.Int32.MaxValue * 1<score>
+        | [||] -> 0<score>
+        | xs -> xs.Length * 1<score>
+
+    member x.Score () : Map<int<score>, Set<Position>> =
+        let unfilled : Set<Position> = Index.AllPositions |> unfilledPositions
+        let scoreMap = 
+            unfilled
+            |> Set.toSeq
+            |> Seq.groupBy (fun p -> x.ScorePosition p)
+            |> Seq.map (fun (score, seqOfPositions) -> (score, seqOfPositions |> Set.ofSeq))
+            |> Map.ofSeq
+        scoreMap        
 
     member x.IsBlank (row:int) (column:int) (digit:int) =
         isBlank (to_pos row column digit)
@@ -55,21 +67,82 @@ type BoardProcessor (board:Board) =
             house'.AvailableDigits.Contains(digit*1<sd>)
         blank && digitIsAvailable
 
+    member x.PositionsByDigit (area:Set<Position>) : Map<int<sd>,Set<Position>> =
+        // get Map<Position,Set<int<sd>>
+        // transform to Map<int<sd>,Set<Position>>
+        // What's that operation called?!
+        area 
+        |> Seq.map (fun pos -> 
+            (x.House pos).Choices
+            |> Seq.map (fun digit -> (digit, pos)))
+        |> Seq.concat
+        |> Seq.groupBy (fun (d,p) -> d)
+        |> Map.ofSeq
+        |> Map.map (fun d dps -> 
+            dps
+            |> Seq.map (fun (d,p) -> p)
+            |> Set.ofSeq)
+
+    member x.RequiredMovesByArea (area:Set<Position>) : Set<Move> =
+        let unfilledArea = area |> unfilledPositions
+        let unneededDigits = (area - unfilledArea) |> Set.map (fun pos -> (board.At pos).Value)
+        let digitMap = 
+            x.PositionsByDigit unfilledArea
+            |> Map.filter (fun d ps -> not (unneededDigits.Contains d))
+        let digitsWithOneMove = 
+            digitMap
+            |> Map.filter (fun d (poss:Set<Position>) -> 1 = Set.count poss)
+        let moveTuples = 
+            digitsWithOneMove
+            |> Map.map (fun (digit:int<sd>) (moves:Set<Position>) -> 
+                moves 
+                |> Set.map (fun (position:Position) -> (position,digit))
+                )
+            |> Map.toSeq
+            |> Seq.map (fun (d,tuples) -> tuples)
+            |> Seq.concat
+            |> Set.ofSeq
+            
+        moveTuples
+        // foreach, if only 1 choice,  
+
+    member x.RequiredMoves : Set<Move> =
+        let r = x.RequiredMovesByArea
+        // union the results of every house
+        let result = 
+            Index.AllAreas
+            |> Array.map r
+            |> Set.unionMany
+        result
+
+    member x.DigitsPlayableAt (pos:Position) : Set<int<sd>> = 
+        match (board.At pos) with
+        | None -> 
+            let required = x.RequiredMoves |> Set.filter (fun (p,d) -> p=pos)
+            if (Set.isEmpty required) then
+                let h = x.House pos
+                h.AvailableDigits
+            else
+                required |> Set.fold (fun state (p,d) -> state.Add d) Set.empty
+        | Some x -> Set.empty
+
+    member x.PrintAvailableDigits (digits:Set<int<sd>>) =
+        let sb = new System.Text.StringBuilder()
+        let chars = 
+            seq {
+                for x in digits do
+                    sb.Append(x) |> ignore
+                    yield x
+            } |> Seq.toList
+        let s = sb.ToString()
+        s.PadRight(9)
+
     override x.ToString() =
         Printer.PrintTemplate board
             (fun pos -> 
                 let s = 
                     match board.At pos with
                     | Some x -> "->" + x.ToString() + "<-"
-                    | None -> 
-                        let house = x.HousesByPosition.[pos]
-                        let sb = new System.Text.StringBuilder()
-                        let chars = 
-                            seq {
-                                for x in house.AvailableDigits do
-                                    sb.Append(x) |> ignore
-                                    yield x
-                            } |> Seq.toList
-                        sb.ToString()
+                    | None -> x.PrintAvailableDigits (x.HousesByPosition.[pos].AvailableDigits)
                 s.PadRight(9)                   
             )

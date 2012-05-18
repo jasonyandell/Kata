@@ -56,9 +56,18 @@ type Board (moves:Map<Position,int<sd>>) =
         if (moves.ContainsKey p) then Some (moves.Item p)
         else None
 
-    member this.Play(digit:int, row:int, col:int) : Board =
+    member this.PlayAt (position:Position) (digit:int<sd>) : Board =
+        new Board(moves.Add (position,digit))
+
+    member this.Play (digit:int) (row:int) (col:int) : Board =
         let pos:Position = {Position.Row=row*1<sr>;Col=col*1<sc>}
-        new Board(moves.Add (pos,digit*1<sd>))
+        this.PlayAt pos (digit*1<sd>)
+
+    member this.Apply (moves:Move seq) : Board =
+        moves
+        |> Seq.fold 
+            (fun (newBoard:Board) (p,d) -> newBoard.PlayAt p d)
+            this
 
 //    member this.tryMove (((r,c),digit):Move) : Board = 
 //        let affected = affectedPositions (r,c) |> Set.ofSeq

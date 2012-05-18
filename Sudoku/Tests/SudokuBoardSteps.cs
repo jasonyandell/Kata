@@ -110,15 +110,20 @@ namespace Tests
             return outS;
         }
 
-        [Given("this board")]
-        public void GivenThisBoard(string input)
+        private static Board ParseInput(string input)
         {
-            var splitBoard = input.Split(new[]{"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            var splitBoard = input.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < 9; i++)
             {
                 splitBoard[i] = Filter(splitBoard[i]);
             }
-            _board = FromStringArray(splitBoard);
+            return FromStringArray(splitBoard);            
+        }
+
+        [Given("this board")]
+        public void GivenThisBoard(string input)
+        {
+            _board = ParseInput(input);
         }
 
         [Then("solve it")]
@@ -157,7 +162,22 @@ namespace Tests
         [When(@"the solver evaluates the board")]
         public void TheSolverEvaluatesTheBoard()
         {
-            _solver = new Solver(_board);            
+            _solver = new Solver(_board);
+        }
+
+        [When(@"the solver makes the required moves")]
+        public void TheSolverMakesTheRequiredMoves()
+        {
+            _solver = _solver.MakeRequiredMoves();
+            _board = _solver.Board;
+        }
+
+        [Then(@"the board looks like this")]
+        public void TheBoardLooksLikeThis(string input)
+        {
+            var otherBoard = ParseInput(input);
+
+            Assert.AreEqual(Printer.Print(otherBoard), Printer.Print(_solver.Board));
         }
 
         [Then(@"I can place (.*) digits at (.*),(.*)")]

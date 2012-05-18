@@ -1,10 +1,11 @@
 ﻿namespace Domain
 
 type House (pos:Position, board:Board) =
+    let rowArea = Index.Row pos.Row
+    let colArea = Index.Column pos.Col
+    let boxArea = Index.Box pos
+
     let makeArea (position:Position) = 
-        let rowArea = Index.ByRow position.Row
-        let colArea = Index.ByColumn position.Col
-        let boxArea = Index.ByBox position
         let area = Seq.concat [rowArea; colArea; boxArea]
         area |> Set.ofSeq
 
@@ -30,7 +31,8 @@ type House (pos:Position, board:Board) =
                     Board.AllDigits 
                     unavailable'
 
-    member x.AvailableMoves =
+    /// Not sure why I need this any more
+    member private x.AvailableMoves =
         seq { 
             for pos in area do
                 match (board.At pos) with
@@ -38,25 +40,17 @@ type House (pos:Position, board:Board) =
                 | _ -> yield pos
         } |> Set.ofSeq
         
-                
-//    let availableMovesByDigit = 
-//        lazy
-//            let unavailable = unavailable.Value
-//            let remaining = Set.difference Board.AllDigits unavailable
-//            // now foreach d in remaining, find subset of area where that d can be unavailable
-//            seq {
-//                for d in remaining do
-//                    for pos in area do
-//                        let v = board.At pos
-//                        match v with
-//                        | Some d -> ()
-//                        | Options o -> if (o.Contains d) then yield (d,pos)
-//            } |> Map.ofSeq
-//
-
-        
     member x.AvailableDigits = availableDigits.Value
-  //  member x.AvailableMovesByDigit = availableMovesByDigit.Value
+
+    member internal x.Choices = 
+        match board.At pos with
+        | Some x -> [x] |> Set.ofSeq
+        | None -> 
+            x.AvailableDigits
+
+    member x.Row = rowArea
+    member x.Column = colArea
+    member x.Box = boxArea
 
     override x.ToString() =
         Printer.PrintTemplate 

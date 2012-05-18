@@ -13,23 +13,25 @@ type Index () =
             for c in columnIndexes -> 
                 { Position.Row=r; Col=c} 
         } 
-        |> Array.ofSeq
+        |> Set.ofSeq
 
-    static let byColumn = 
+    static let columns = 
         seq {
         for c in columnIndexes ->
-            (c, seq { for r in rowIndexes do yield {Position.Row=r; Col=c}})
+            (c, Set.ofSeq (seq { for r in rowIndexes do yield {Position.Row=r; Col=c}}))
         } 
         |> Map.ofSeq
 
     // TODO: Lazy,ref, Lazy-of-ref
-    static let byRow = 
+    static let rows = 
         seq {
             for r in rowIndexes ->
-                (r, seq { for c in columnIndexes do yield {Position.Row=r; Col=c}})
-        } |> Map.ofSeq
-
-    static let byBox = 
+                (r, Set.ofSeq (seq { for c in columnIndexes do yield {Position.Row=r; Col=c}}))
+        }
+         
+        |> Map.ofSeq
+        
+    static let boxes = 
         seq {
             let rows = Seq.filter (fun r -> r < 3<sr>) rowIndexes
             let cols = Seq.filter (fun c -> c < 3<sc>) columnIndexes
@@ -42,19 +44,39 @@ type Index () =
                                 let r' = r*3 + i*1<sr>
                                 let c' = c*3 + j*1<sc>
                                 {Position.Row=r'; Col=c'}
-                        } 
+                        } |> Set.ofSeq
 
                     let out = 
-                        ( {Position.Row=r; Col=c}, thisBox )
+                        ( {Position.Row=r*3; Col=c*3}, thisBox )
                     out
         } |> Map.ofSeq
 
-    static member RowIndexes = rowIndexes
-    static member ColumnIndexes = columnIndexes
-    static member AllPositions = allPositions
-    static member ByRow (row:int<sr>) = byRow.Item row
-    static member ByColumn (col:int<sc>) = byColumn.Item col
-    static member ByBox (pos:Position) = 
-        let boxPos = {Position.Row=pos.Row/3;Col=pos.Col/3}
-        byBox.Item boxPos
+    static let boxIndexes = 
+        boxes 
+        |> Map.fold (fun state key value -> state |> Set.add key) Set.empty
 
+    static let sets mapOfSets = 
+        mapOfSets
+        |> Map.fold (fun (state:Set<Position> list) key value -> state |> List.append [value]) List.empty
+        |> List.toArray
+
+    static let allAreas : Set<Position> array = 
+        Array.concat
+            [sets boxes;sets columns; sets rows]
+
+    static member AllAreas = allAreas
+    static member Boxes = boxes
+    static member Columns = columns
+    static member Rows = rows
+
+    static member BoxIndexes = boxIndexes
+    static member ColumnIndexes = columnIndexes
+    static member RowIndexes = rowIndexes
+
+    static member AllPositions = allPositions
+ 
+    static member Row (row:int<sr>) = rows.Item row
+    static member Column (col:int<sc>) = columns.Item col
+    static member Box (pos:Position) = 
+        let boxPos = {Position.Row=3*(pos.Row/3);Col=3*(pos.Col/3)}
+        boxes.Item boxPos
