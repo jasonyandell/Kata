@@ -168,8 +168,7 @@ namespace Tests
         [When(@"the solver makes the required moves")]
         public void TheSolverMakesTheRequiredMoves()
         {
-            _solver = _solver.MakeRequiredMoves();
-            _board = _solver.Board;
+            _board = _solver.MakeRequiredMoves();
         }
 
         [Then(@"the board looks like this")]

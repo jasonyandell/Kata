@@ -6,10 +6,12 @@ open System.Threading.Tasks
 
 type Solver (board:Board) =
     let _processor = new BoardProcessor(board)
+
     let _requiredMoves = _processor.RequiredMoves
+    
     let _scoreMap = _processor.Score()
 
-    let tryGetFromMap key = 
+    let tryGetFromMap key : Set<Position> = 
         if (_scoreMap.ContainsKey key) then _scoreMap.Item key
         else Set.empty       
 
@@ -35,28 +37,62 @@ type Solver (board:Board) =
         let digits = _processor.DigitsPlayableAt pos
         digits |> Seq.map (fun d -> (pos, d)) |> Set.ofSeq
 
-    member x.MakeRequiredMoves () : Solver = 
-        if (_scoreMap.ContainsKey 0<score>) then 
-            failwith "zero score.  error."
-        else if (_scoreMap.ContainsKey 1<score>) then 
+    member x.MakeRequiredMoves () : Board = 
+        if (_scoreMap.ContainsKey 1<score>) then 
             let moves = 
                 // for every required position, make seq of Moves for the position
                 (_scoreMap.Item 1<score>)
                 // then concat them all together
                 |> Set.map (fun pos -> x.CreateMoves pos)
                 |> Set.unionMany
-            new Solver( board.Apply moves )
-        else
-            x
+            board.Apply moves
+        else board
 
     member private x.PrintPosition (pos:Position) = 
         let playable = x.DigitsPlayableAt pos |> Set.ofSeq
         let debug = _processor.PrintAvailableDigits playable
         debug
 
-
     member x.PrintChoices () : string = 
         Printer.PrintTemplate board x.PrintPosition
-            
+
     member x.Board = board
+    
+    member x.Solve () : Board seq =
+        let toPrioritizedMoveList (map:Map<int<score>,Set<Position>>) : Move seq =
+            let list' = 
+                map
+                |> Map.toList
+                |> List.map (fun (score, positions) ->
+                    let a = 
+                        positions
+                        |> Set.fold (fun (result:Move list) position -> 
+                            let digits = x.DigitsPlayableAt position
+                            let movesHere : Move list = 
+                                digits 
+                                |> Seq.map (fun d -> (position, d))
+                                |> List.ofSeq
+                            List.append result movesHere)
+                            []
+                    a)
+            list'
+            |> List.concat
+            |> List.toSeq
+            
+        if (not _errorMoves.IsEmpty) then 
+            Seq.empty
+        elif (not _requiredMoves.IsEmpty) then 
+            let next = new Solver( x.MakeRequiredMoves() )
+            next.Solve ()
+        else 
+            let moves = 
+                _optionalMovesByScore
+                |> toPrioritizedMoveList
+            ``concat result of solving boards with move applied``
+            // apply the last moves one by one
+            // join all the solutions together 
         
+        // in score order
+        // try each move at that score
+        // if board is full
+        // recurse
