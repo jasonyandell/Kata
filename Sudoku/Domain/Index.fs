@@ -3,9 +3,11 @@
 type Index () = 
     static let to_sc x = x*1<sc>
     static let to_sr x = x*1<sr>
+    static let to_sd x = x*1<sd>
 
     static let columnIndexes = [0..8] |> Seq.map to_sc
     static let rowIndexes = [0..8] |> Seq.map to_sr
+    static let allDigits = [1..9] |> Seq.map to_sd |> Set.ofSeq
 
     static let allPositions = 
         seq { 
@@ -57,13 +59,16 @@ type Index () =
 
     static let sets mapOfSets = 
         mapOfSets
-        |> Map.fold (fun (state:Set<Position> list) key value -> state |> List.append [value]) List.empty
+        |> Map.fold 
+            (fun (state:Set<Position> list) key value -> 
+                [value] |> List.append state) List.empty
         |> List.toArray
 
     static let allAreas : Set<Position> array = 
         Array.concat
-            [sets boxes;sets columns; sets rows]
+            [sets rows; sets boxes; sets columns]
 
+    static member AllDigits = allDigits
     static member AllAreas = allAreas
     static member Boxes = boxes
     static member Columns = columns

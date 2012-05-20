@@ -166,69 +166,6 @@ this.ScenarioSetup(scenarioInfo);
 #line hidden
             this.ScenarioCleanup();
         }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Solve empty board")]
-        public virtual void SolveEmptyBoard()
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve empty board", ((string[])(null)));
-#line 68
-this.ScenarioSetup(scenarioInfo);
-#line 69
- testRunner.Given("an empty board");
-#line 70
- testRunner.Then("solve it");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Solve a difficult board")]
-        public virtual void SolveADifficultBoard()
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve a difficult board", ((string[])(null)));
-#line 72
-this.ScenarioSetup(scenarioInfo);
-#line 73
- testRunner.Given("a difficult board");
-#line 74
- testRunner.Then("solve it");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Solve a board from project Euler")]
-        public virtual void SolveABoardFromProjectEuler()
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve a board from project Euler", ((string[])(null)));
-#line 76
-this.ScenarioSetup(scenarioInfo);
-#line 77
- testRunner.Given("an example Euler board");
-#line 78
- testRunner.Then("solve it");
-#line hidden
-            this.ScenarioCleanup();
-        }
-        
-        [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Can take board input from scenario file")]
-        public virtual void CanTakeBoardInputFromScenarioFile()
-        {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Can take board input from scenario file", ((string[])(null)));
-#line 80
-this.ScenarioSetup(scenarioInfo);
-#line hidden
-#line 81
- testRunner.Given("this board", "4 . . . . . 8 . 5\r\n. 3 . . . . . . .\r\n. . . 7 . . . . .\r\n. 2 . . . . . 6 .\r\n. . ." +
-                    " . 8 . 4 . .\r\n. 4 . . 1 . . . .\r\n. . . 6 . 3 . 7 .\r\n5 . 3 2 . . . . .\r\n1 . 4 . ." +
-                    " . . . .", ((TechTalk.SpecFlow.Table)(null)));
-#line 93
- testRunner.Then("solve it");
-#line hidden
-            this.ScenarioCleanup();
-        }
     }
 }
 #pragma warning restore

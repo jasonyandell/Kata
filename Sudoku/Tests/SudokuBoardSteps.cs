@@ -129,34 +129,38 @@ namespace Tests
         [Then("solve it")]
         public void SolveIt()
         {
-            TechTalk.SpecFlow.ScenarioContext.Current.Pending();
-            //Board sample = null;
-            
-            //var watch = new Stopwatch();
-            //watch.Start();
+            Board sample = null;
 
-            //var split = new Stopwatch();
-            //split.Start();
-            //Debug.WriteLine(BoardProcessor.Print(_board));
-            //int solutionCount = 0,last = 0;
-            //foreach (var solution in Solver.Solve(_board))
-            //{
-            //    sample = solution;
-            //    if (solutionCount==0) Debug.WriteLine(BoardProcessor.Print(solution));
-            //    solutionCount++;
-            //    if (solutionCount%1000 != 0) continue;
-            //    split.Stop();
-            //    var time = split.ElapsedMilliseconds*1.0/1000.0;
-            //    Debug.WriteLine("{0} boards / {1} seconds. Avg: {2}", solutionCount,
-            //                    time, (solutionCount-last)*1.0/time);
-            //    if (solutionCount % 10000 == 0) Debug.WriteLine(BoardProcessor.Print(solution));
-            //    last = solutionCount;
-            //    split.Restart();
-            //}
-            //watch.Stop();
-            //var ts = watch.Elapsed;
-            //Debug.WriteLine("Complete.\n{0} solutions in {1}. Avg:{2}solutions/sec",solutionCount,ts,solutionCount*1.0/ts.TotalSeconds);
-            //Debug.WriteLine(BoardProcessor.Print(sample));
+            var watch = new Stopwatch();
+            watch.Start();
+
+            var split = new Stopwatch();
+            split.Start();
+            Debug.WriteLine(Printer.Print(_board));
+            int solutionCount = 0, last = 0;
+            var solver = new Solver(_board);
+            foreach (var solution in solver.Solve())
+            {
+                sample = solution;
+                if (solutionCount < 10)
+                {
+                    Debug.WriteLine(Printer.Print(solution));
+                    Debug.WriteLine("");
+                }
+                solutionCount++;
+                if (solutionCount % 1000 != 0) continue;
+                split.Stop();
+                var time = split.ElapsedMilliseconds * 1.0 / 1000.0;
+                Debug.WriteLine("{0} boards / {1} seconds. Avg: {2}", solutionCount,
+                                time, (solutionCount - last) * 1.0 / time);
+                if (solutionCount % 10000 == 0) Debug.WriteLine(Printer.Print(solution));
+                last = solutionCount;
+                split.Restart();
+            }
+            watch.Stop();
+            var ts = watch.Elapsed;
+            Debug.WriteLine("Complete.\n{0} solutions in {1}. Avg:{2}solutions/sec", solutionCount, ts, solutionCount * 1.0 / ts.TotalSeconds);
+            Debug.WriteLine(Printer.Print(sample));
         }
 
         [When(@"the solver evaluates the board")]
@@ -169,6 +173,8 @@ namespace Tests
         public void TheSolverMakesTheRequiredMoves()
         {
             _board = _solver.MakeRequiredMoves();
+            _solver = new Solver(_board);
+            Debug.WriteLine("Board after required moves made:\n" + Printer.Print(_board));
         }
 
         [Then(@"the board looks like this")]
@@ -176,7 +182,7 @@ namespace Tests
         {
             var otherBoard = ParseInput(input);
 
-            Assert.AreEqual(Printer.Print(otherBoard), Printer.Print(_solver.Board));
+            Assert.AreEqual(Printer.Print(otherBoard), Printer.Print(_board));
         }
 
         [Then(@"I can place (.*) digits at (.*),(.*)")]

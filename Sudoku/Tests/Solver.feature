@@ -24,6 +24,7 @@ Scenario Template: Evaluate a board
 Examples:
 | row | col | digit_count |
 | 0   | 0   | 0           |
+| 5   | 1   | 0           |
 | 7   | 5   | 0           |
 | 7   | 2   | 0           |
 | 7   | 6   | 2           |

@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Datapoint.fs" />
+    <Compile Include="MeasuresAndTypes.fs" />
     <Compile Include="Board.fs" />
     <Compile Include="Printer.fs" />
     <Compile Include="Index.fs" />

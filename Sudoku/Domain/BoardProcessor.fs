@@ -1,7 +1,5 @@
 ﻿namespace Domain
 
-[<Measure>] type score
-
 type BoardProcessor (board:Board) =
 
     let housesByPosition =         
@@ -28,6 +26,29 @@ type BoardProcessor (board:Board) =
 
     let unfilledPositions (positions:Set<Position>) = 
         positions |> Set.filter (fun pos -> (board.At pos).IsNone)
+
+    member x.MovesByPosition (position:Position) : Move seq =
+        (x.DigitsPlayableAt position)
+        |> Set.toSeq
+        |> Seq.map (fun d -> (position, d))
+
+    member x.ToPrioritizedMoveList (map:Map<int<score>,Set<Position>>) : Move seq =
+        let list' = 
+            map
+            |> Map.toList
+            |> List.map (fun (score, positions) ->
+                let a = 
+                    positions
+                    |> Set.fold (fun (result:Move list) position -> 
+                        let movesHere : Move list = 
+                            x.MovesByPosition position
+                            |> List.ofSeq
+                        List.append result movesHere)
+                        []
+                a)
+        list'
+        |> List.concat
+        |> List.toSeq
 
     member x.HousesByPosition = housesByPosition.Force ()
 
@@ -105,6 +126,30 @@ type BoardProcessor (board:Board) =
             
         moveTuples
         // foreach, if only 1 choice,  
+
+    member x.IsAreaValid (area:Set<Position>) : bool =
+        let availableDigits = 
+            area 
+            |> Set.fold (fun (state:Set<int<sd>>) pos -> 
+                match board.At pos with
+                | None -> state
+                | Some d -> state.Remove d) 
+               Index.AllDigits
+            |> Set.count
+
+        let availablePositions = 
+            area
+            |> unfilledPositions
+            |> Set.count
+
+        availableDigits = availablePositions
+
+    member x.IsValid () : bool =
+        let a = Index.AllAreas
+        let result = 
+            Index.AllAreas
+            |> Array.forall (fun area -> area |> x.IsAreaValid)
+        result
 
     member x.RequiredMoves : Set<Move> =
         let r = x.RequiredMovesByArea

@@ -79,6 +79,7 @@ namespace Tests
         [NUnit.Framework.TestAttribute()]
         [NUnit.Framework.DescriptionAttribute("Evaluate a board")]
         [NUnit.Framework.TestCaseAttribute("0", "0", "0", new string[0])]
+        [NUnit.Framework.TestCaseAttribute("5", "1", "0", new string[0])]
         [NUnit.Framework.TestCaseAttribute("7", "5", "0", new string[0])]
         [NUnit.Framework.TestCaseAttribute("7", "2", "0", new string[0])]
         [NUnit.Framework.TestCaseAttribute("7", "6", "2", new string[0])]
@@ -105,16 +106,16 @@ this.FeatureBackground();
         public virtual void PlayRequiredMoves()
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Play required moves", ((string[])(null)));
-#line 32
+#line 33
 this.ScenarioSetup(scenarioInfo);
 #line 6
 this.FeatureBackground();
-#line 33
- testRunner.When("the solver evaluates the board");
 #line 34
+ testRunner.When("the solver evaluates the board");
+#line 35
   testRunner.And("the solver makes the required moves");
 #line hidden
-#line 35
+#line 36
  testRunner.Then("the board looks like this", "4 . . . . . 8 . 5\r\n. 3 . . . . . . .\r\n. . . 7 . . . . .\r\n. 2 . . . . . 6 .\r\n. . ." +
                     " . 8 . 4 . .\r\n. 4 . . 1 . . . .\r\n. . . 6 . 3 . 7 .\r\n5 . 3 2 . 1 . . .\r\n1 . 4 . ." +
                     " . . . .", ((TechTalk.SpecFlow.Table)(null)));

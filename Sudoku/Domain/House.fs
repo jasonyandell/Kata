@@ -35,7 +35,7 @@ type House (pos:Position, board:Board) =
     member private x.AvailableMoves =
         seq { 
             for pos in area do
-                match (board.At pos) with
+                match (board.At pos) withle
                 | Some digit -> ()
                 | _ -> yield pos
         } |> Set.ofSeq

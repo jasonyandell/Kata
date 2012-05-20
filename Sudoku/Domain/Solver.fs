@@ -6,8 +6,6 @@ open System.Threading.Tasks
 
 type Solver (board:Board) =
     let _processor = new BoardProcessor(board)
-
-    let _requiredMoves = _processor.RequiredMoves
     
     let _scoreMap = _processor.Score()
 
@@ -15,9 +13,19 @@ type Solver (board:Board) =
         if (_scoreMap.ContainsKey key) then _scoreMap.Item key
         else Set.empty       
 
+    let createMoves pos = 
+        let digits = _processor.DigitsPlayableAt pos
+        digits |> Seq.map (fun d -> (pos, d)) |> Set.ofSeq
+
     let _errorMoves = tryGetFromMap 0<score>
 
-    let _requiredMoves = tryGetFromMap 1<score>    
+    let _requiredMoves = 
+        let permutationRequired = _processor.RequiredMoves
+        let digitRequired = 
+            tryGetFromMap 1<score> 
+            |> Set.map (fun pos -> createMoves pos)
+            |> Set.unionMany
+        Set.union permutationRequired digitRequired
 
     let _optionalMovesByScore = 
         Map.fold (fun newMap key set -> 
@@ -33,19 +41,11 @@ type Solver (board:Board) =
         _processor.DigitsPlayableAt pos
         |> Set.toSeq
 
-    member x.CreateMoves (pos:Position) : Set<Move> = 
-        let digits = _processor.DigitsPlayableAt pos
-        digits |> Seq.map (fun d -> (pos, d)) |> Set.ofSeq
+    member x.CreateMoves (pos:Position) : Set<Move> = createMoves pos
 
     member x.MakeRequiredMoves () : Board = 
-        if (_scoreMap.ContainsKey 1<score>) then 
-            let moves = 
-                // for every required position, make seq of Moves for the position
-                (_scoreMap.Item 1<score>)
-                // then concat them all together
-                |> Set.map (fun pos -> x.CreateMoves pos)
-                |> Set.unionMany
-            board.Apply moves
+        if (not _requiredMoves.IsEmpty) then 
+            board.Apply _requiredMoves
         else board
 
     member private x.PrintPosition (pos:Position) = 
@@ -58,41 +58,62 @@ type Solver (board:Board) =
 
     member x.Board = board
     
+    member x.IsValid() =
+        _processor.IsValid()
+
     member x.Solve () : Board seq =
-        let toPrioritizedMoveList (map:Map<int<score>,Set<Position>>) : Move seq =
-            let list' = 
-                map
-                |> Map.toList
-                |> List.map (fun (score, positions) ->
-                    let a = 
-                        positions
-                        |> Set.fold (fun (result:Move list) position -> 
-                            let digits = x.DigitsPlayableAt position
-                            let movesHere : Move list = 
-                                digits 
-                                |> Seq.map (fun d -> (position, d))
-                                |> List.ofSeq
-                            List.append result movesHere)
-                            []
-                    a)
-            list'
-            |> List.concat
-            |> List.toSeq
-            
         if (not _errorMoves.IsEmpty) then 
             Seq.empty
+        elif (board.IsComplete) then
+            if (x.IsValid()) then 
+                [board] |> List.toSeq
+            else    
+                Seq.empty
         elif (not _requiredMoves.IsEmpty) then 
             let next = new Solver( x.MakeRequiredMoves() )
-            next.Solve ()
+            if (next.IsValid()) then 
+                next.Solve ()
+            else
+                Seq.empty 
         else 
-            let moves = 
-                _optionalMovesByScore
-                |> toPrioritizedMoveList
-            ``concat result of solving boards with move applied``
-            // apply the last moves one by one
-            // join all the solutions together 
-        
-        // in score order
-        // try each move at that score
-        // if board is full
-        // recurse
+            if (_optionalMovesByScore.IsEmpty) then Seq.empty
+            else
+                let waste = 
+                    _optionalMovesByScore
+                    |> Map.toSeq
+                    |> Seq.take(1)
+                    |> Seq.toArray
+
+                let (firstKey,bestPositions) = waste.[0]
+
+                let bestMoves = 
+                    bestPositions
+                    |> Set.toSeq
+                    |> Seq.map _processor.MovesByPosition
+                    |> Seq.concat                        
+                    |> Array.ofSeq
+
+                let otherMoves = 
+                    (_optionalMovesByScore.Remove firstKey)
+                    |> _processor.ToPrioritizedMoveList
+                    |> Array.ofSeq
+
+                let apply move = 
+                    let newBoard = board.Apply [move]
+                    let newSolver = new Solver(newBoard)
+                    newSolver.Solve()
+
+                seq {
+                    let bestSolutions = 
+                        bestMoves
+                        |> Array.Parallel.map apply
+                        |> Seq.concat
+                    yield! bestSolutions
+
+                    let otherSolutions = 
+                        otherMoves
+                        |> Array.Parallel.map apply
+                        |> Seq.concat
+                    yield! otherSolutions                
+                }
+
