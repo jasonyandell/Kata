@@ -45,3 +45,31 @@ Scenario: Play required moves
 5 . 3 2 . 1 . . .
 1 . 4 . . . . . .
 	"""
+
+Scenario: Check required moves
+	Given this board
+	"""
+. . . . . . . . .
+. . . 1 . . . . .
+. . . . . . 1 . .
+. . . . 1 . . . .
+. 1 . . . . . . .
+. . . . . . . 1 .
+. . 1 . . . . . .
+. . . . . 1 . . .
+. . . . . . . . .
+	"""
+	When the solver evaluates the board
+	 And the solver makes the required moves
+	Then the board looks like this
+	"""
+1 . . . . . . . .
+. . . 1 . . . . .
+. . . . . . 1 . .
+. . . . 1 . . . .
+. 1 . . . . . . .
+. . . . . . . 1 .
+. . 1 . . . . . .
+. . . . . 1 . . .
+. . . . . . . . 1
+	"""

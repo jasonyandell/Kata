@@ -122,6 +122,33 @@ this.FeatureBackground();
 #line hidden
             this.ScenarioCleanup();
         }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Check required moves")]
+        public virtual void CheckRequiredMoves()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Check required moves", ((string[])(null)));
+#line 49
+this.ScenarioSetup(scenarioInfo);
+#line 6
+this.FeatureBackground();
+#line hidden
+#line 50
+ testRunner.Given("this board", ". . . . . . . . .\r\n. . . 1 . . . . .\r\n. . . . . . 1 . .\r\n. . . . 1 . . . .\r\n. 1 ." +
+                    " . . . . . .\r\n. . . . . . . 1 .\r\n. . 1 . . . . . .\r\n. . . . . 1 . . .\r\n. . . . ." +
+                    " . . . .", ((TechTalk.SpecFlow.Table)(null)));
+#line 62
+ testRunner.When("the solver evaluates the board");
+#line 63
+  testRunner.And("the solver makes the required moves");
+#line hidden
+#line 64
+ testRunner.Then("the board looks like this", "1 . . . . . . . .\r\n. . . 1 . . . . .\r\n. . . . . . 1 . .\r\n. . . . 1 . . . .\r\n. 1 ." +
+                    " . . . . . .\r\n. . . . . . . 1 .\r\n. . 1 . . . . . .\r\n. . . . . 1 . . .\r\n. . . . ." +
+                    " . . . 1", ((TechTalk.SpecFlow.Table)(null)));
+#line hidden
+            this.ScenarioCleanup();
+        }
     }
 }
 #pragma warning restore

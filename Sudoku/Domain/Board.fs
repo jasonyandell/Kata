@@ -2,49 +2,57 @@
 
 open Microsoft.FSharp.Collections
 
-type Board (moves:Map<Position,int<sd>>) =
+type Board (moves:Set<(Position * int<Dig>)>) =    
+    let cache =
+        lazy
+            let cache' = Array.create 81 None
+            let init = 
+                moves
+                |> Seq.fold (fun state (key:Position, value:int<Dig>) ->
+                    cache'.[key.ToIndex] <- Some value
+                    state)
+                    []
+            cache'
     
-    static let allDigits = [1..9] |> Seq.map (fun i -> i * 1<sd>) |> Set.ofSeq
-
-    static let index p =
-        (p.Row*9)/1<sr> + p.Col/1<sc>
-
-    static let position i = 
-        {Position.Row = 1<sr>*(i/9);
-         Col=1<sc>*(i%9)}
+    static let allDigits = [1..9] |> Seq.map (fun i -> i * 1<Dig>) |> Set.ofSeq
 
     let isComplete = 81 = moves.Count
 
-    static member AllDigits = allDigits
-
-    static member Empty = new Board(Map.empty)
-
-    member this.Moves = moves
-
-    override x.ToString() =
+    let key =
         let memory = Array.init 81 (fun i -> ".")
         let start = memory
         let interim = 
-            Map.fold 
-                (fun (output:string[]) pos digit -> 
+            Seq.fold 
+                (fun (output:string[]) (pos:Position, digit) -> 
                     let digitAsString = digit.ToString()
-                    output.[index pos] <- digitAsString
+                    output.[pos.ToIndex] <- digitAsString
                     output) 
                 start
                 moves
         System.String.Join("",memory)
 
+    static member AllDigits = allDigits
+
+    static member Empty = new Board(Set.empty)
+
+    member this.Moves = moves
+
+    member this.Key = key
+
+    override x.ToString() = key
+
     static member ofString (str:string)  = 
         let (moveCount, moveSet) =
-            str.ToCharArray()
+            let s = str.Replace(" ", "")
+            s.ToCharArray()
             |> Array.fold 
                 (fun (i,moves) ch -> 
                     (i+1, 
                         match ch with
                         | '.' -> moves
                         | x when x>='1' && x<='9' -> 
-                            let digit = System.Convert.ToInt32(ch) * 1<sd>
-                            let pos = position i
+                            let digit = (System.Convert.ToInt32(ch) - System.Convert.ToInt32('0')) * 1<Dig>
+                            let pos = Position.FromIndex i
                             Set.add (pos,digit) moves
                         | _ -> 
                             let message = "bad input at index"+(string i)+"\n"+str+"\n"+(String.replicate (i-1) " ")+"^\n"
@@ -52,23 +60,35 @@ type Board (moves:Map<Position,int<sd>>) =
                     )
                 )
                 (0,Set.empty)
-        new Board(moveSet |> Set.toSeq |> Map.ofSeq)
+        new Board(moveSet)
 
-    member this.At p = 
-        if (moves.ContainsKey p) then Some (moves.Item p)
-        else None
+    member this.At (p:Position) : int<Dig> option = 
+        (cache.Value).[p.ToIndex]
 
-    member this.PlayAt (position:Position) (digit:int<sd>) : Board =
-        new Board(moves.Add (position,digit))
+    member this.IsBlank (p:Position) : bool =
+        match (this.At p) with
+        | Some x -> false
+        | _ -> true
+
+    member this.PlayAt (position:Position) (digit:int<Dig>) : Board =
+        let move = (position,digit)
+
+        new Board(Set.add move moves)
 
     member this.Play (digit:int) (row:int) (col:int) : Board =
-        let pos:Position = {Position.Row=row*1<sr>;Col=col*1<sc>}
-        this.PlayAt pos (digit*1<sd>)
+        let pos:Position = new Position(row*1<SRow>, col*1<SCol>)
+        this.PlayAt pos (digit*1<Dig>)
 
     member this.IsComplete = isComplete
 
     member this.Apply (otherMoves:Move seq) : Board =
-        let newMoves = 
-            Seq.fold (fun newMoves' (p,d) -> newMoves' |> Map.add p d) moves otherMoves
-        if (Seq.isEmpty newMoves) then this
-        else new Board(newMoves)
+        if (Seq.isEmpty otherMoves) then this
+        else
+            let otherMoveSet = otherMoves |> Set.ofSeq
+
+            let sanityCheck = Set.intersect otherMoveSet moves
+
+            if (not (sanityCheck.IsEmpty)) then
+                failwith "bad mojo"
+            else
+                new Board(Set.union (otherMoves |> Set.ofSeq) moves)

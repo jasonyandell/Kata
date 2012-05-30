@@ -1,52 +1,127 @@
 ﻿namespace Domain
 
+//visitor of sourcecode
+//- mark place to add a text
+//- inspect data
+//- execute
+
 open System.Collections.Generic
 open Microsoft.FSharp.Collections
 open System.Threading.Tasks
+open System.Collections.Concurrent
+open System.Diagnostics
+open System.Linq
 
-type Solver (board:Board) =
+[<Measure>] type MoveIndex
+
+type Solver private (board:Board) =
+
     let _processor = new BoardProcessor(board)
+
+    let priority = _processor.NumericScore
     
-    let _scoreMap = _processor.Score()
+    static let foundBoards = new ConcurrentBag<string>()
+    static let queue = new SortedDictionary<int*int<score>*string,Solver*int<MoveIndex>>()
 
-    let tryGetFromMap key : Set<Position> = 
-        if (_scoreMap.ContainsKey key) then _scoreMap.Item key
-        else Set.empty       
+    static let getScore(s:Solver,index:int<MoveIndex>,str:string) =
+        let moves:Move[] = s.Processor.Moves
+        let (posAtIndex:Position, digitAtIndex:int<Dig>) = moves.[index/1<MoveIndex>]
 
-    let createMoves pos = 
-        let digits = _processor.DigitsPlayableAt pos
-        digits |> Seq.map (fun d -> (pos, d)) |> Set.ofSeq
+        let movesAtIndex = (s.House posAtIndex).DigitsThatCanBePlayedInThisPosition.Count
+//        let moveCountAsFloat : float = float movesAtIndex
+//        let percentWrong = 1.0 - (1.0 / moveCountAsFloat)
+//        let nscore = System.Convert.ToInt32( percentWrong * (float s.Priority) ) * 1<score>
+//
+//        queue.Any(fun kvp -> 
+//            let (score, idx, boardKey) = kvp.Key
+//            boardKey = str) 
+//        |> ignore
 
-    let _errorMoves = tryGetFromMap 0<score>
+        movesAtIndex
+        //s.Priority
+        //nscore
 
-    let _requiredMoves = 
-        let permutationRequired = _processor.RequiredMoves
-        let digitRequired = 
-            tryGetFromMap 1<score> 
-            |> Set.map (fun pos -> createMoves pos)
-            |> Set.unionMany
-        Set.union permutationRequired digitRequired
 
-    let _optionalMovesByScore = 
-        Map.fold (fun newMap key set -> 
-            match key with
-            | x when x=0<score> || x=1<score> -> newMap |> Map.remove x
-            | _ -> newMap) _scoreMap _scoreMap
+
+    static let enqueue (score:int<score>, str:string) (s:Solver,index:int<MoveIndex>) = 
+        if (not (foundBoards.Contains(str))) then
+            let len = foundBoards.Count
+            ()
+        else
+            ()
+
+        let nscore = getScore (s, index, str)
+
+        queue.Add(( nscore , s.Priority, str), (s,index))
+//        queue.AddOrUpdate(pri, s, (fun (key:int<score>) (value:Solver*int<MoveIndex>) -> value))
+  //      |> ignore
+
+    static let dequeue () = 
+        let (priority:int, currScore:int<score>,boardKey:string) as firstKey = queue.Keys.First()
+        let (solver:Solver,moveIndex) = queue.Values.First()
+        queue.Remove(firstKey) |> ignore
+        (priority, solver, moveIndex)
+
+    static let pppush (pri:int<score>, boardKey:string) (solver:Solver, idx:int<MoveIndex>) =
+//        if (pri = 0<score>) then ()
+//        else
+//            if (queue.ContainsKey (pri,boardKey)) then
+////                let (solver',moveIndex) = queue.Item pri
+////                if (solver'.Board = solver.Board) then
+//                    let alreadyThere = queue.[(pri, boardKey)]
+//                    let same = ((solver,idx)=alreadyThere)
+//                    ()
+////                else
+////                    push (pri+1<score>) s
+//            else
+                enqueue (pri, boardKey) (solver, idx)
+
+    static let ppush (solver:Solver,index) =
+        pppush (solver.Priority, solver.Board.Key) (solver, index)
+
+    static let pushUpdate (solver:Solver,index) =
+        ppush (solver,index)
+
+    static let addNew (solver:Solver) : Solver option =
+        if (foundBoards.Contains(solver.Board.Key)) then
+            None
+        else
+            let finalBoard = solver.Board
+            if (not (foundBoards.Contains(finalBoard.Key))) then
+                foundBoards.Add(finalBoard.Key)
+            if (solver.IsValid) then
+                ppush (solver, 0<MoveIndex>)
+                Some solver
+            else
+                None
+
+    static let mutable initialized = false
+
+    static member Initialize(solver:Solver) =
+        if (not initialized) && (queue.Count=0) then
+            initialized <- true
+            foundBoards.Add(solver.Board.Key)
+            if (solver.IsValid && (not solver.Board.IsComplete)) then
+                ppush (solver, 0<MoveIndex>)
+    
+    override x.ToString() :string =
+        (x.Priority,x.Board.Key).ToString()
+
+
+    member x.Priority : int<score> = priority
 
     member x.House (pos:Position) : House =  _processor.House pos
 
-    member x.DigitsPlayableAt (pos:Position) : IEnumerable<int<sd>> =        
+    static member Create(board:Board) : Solver = 
+        (new Solver(board)).MakeRequiredMoves()
+
+    member x.DigitsPlayableAt (pos:Position) : IEnumerable<int<Dig>> =        
         //if there are any required moves here, return those
         // else return choices
         _processor.DigitsPlayableAt pos
         |> Set.toSeq
 
-    member x.CreateMoves (pos:Position) : Set<Move> = createMoves pos
-
-    member x.MakeRequiredMoves () : Board = 
-        if (not _requiredMoves.IsEmpty) then 
-            board.Apply _requiredMoves
-        else board
+//    member x.CreateMoves (pos:Position) : Set<Move> = createMoves pos
 
     member private x.PrintPosition (pos:Position) = 
         let playable = x.DigitsPlayableAt pos |> Set.ofSeq
@@ -56,64 +131,74 @@ type Solver (board:Board) =
     member x.PrintChoices () : string = 
         Printer.PrintTemplate board x.PrintPosition
 
-    member x.Board = board
+    member x.Board : Board = board
+    member x.Processor : BoardProcessor = _processor
     
-    member x.IsValid() =
-        _processor.IsValid()
+    member x.IsValid = _processor.IsValid()
 
-    member x.Solve () : Board seq =
-        if (not _errorMoves.IsEmpty) then 
-            Seq.empty
-        elif (board.IsComplete) then
-            if (x.IsValid()) then 
-                [board] |> List.toSeq
-            else    
-                Seq.empty
-        elif (not _requiredMoves.IsEmpty) then 
-            let next = new Solver( x.MakeRequiredMoves() )
-            if (next.IsValid()) then 
-                next.Solve ()
-            else
-                Seq.empty 
-        else 
-            if (_optionalMovesByScore.IsEmpty) then Seq.empty
-            else
-                let waste = 
-                    _optionalMovesByScore
-                    |> Map.toSeq
-                    |> Seq.take(1)
-                    |> Seq.toArray
+    /// Private now, factory method first ensures all required moves are made
+    member x.MakeRequiredMoves() : Solver =
+        let b = ref board 
+        let currSolver = ref x
 
-                let (firstKey,bestPositions) = waste.[0]
+        while (((!currSolver).Processor.RequiredMoves().Length) > 0) do
+            b := (!b).Apply ((!currSolver).Processor.RequiredMoves())
+            currSolver := new Solver(!b)
+        (!currSolver)
 
-                let bestMoves = 
-                    bestPositions
-                    |> Set.toSeq
-                    |> Seq.map _processor.MovesByPosition
-                    |> Seq.concat                        
-                    |> Array.ofSeq
+    member x.IsComplete : bool =
+        x.IsValid && (x.Board.IsComplete)
 
-                let otherMoves = 
-                    (_optionalMovesByScore.Remove firstKey)
-                    |> _processor.ToPrioritizedMoveList
-                    |> Array.ofSeq
+    static member Solve(solver:Solver) : Solver seq =        
 
-                let apply move = 
-                    let newBoard = board.Apply [move]
-                    let newSolver = new Solver(newBoard)
-                    newSolver.Solve()
+        let applyMove (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) (index:int<MoveIndex>) =
+            let typelessIndex = index/1<MoveIndex>
+            if (typelessIndex < moves.Length) then
+                highestIndex := index
+                let move = moves.[typelessIndex]
+                let veryTemporary = Solver.Create(curr.Board.Apply [move])
+                match (addNew veryTemporary) with
+                | None -> () // this board has been added before
+                | Some nextSolver ->
+                    let newBoard = nextSolver.Board
+                    if (nextSolver.Priority > curr.Priority) then
+                        Debug.WriteLine("Dispute: made a move ("+move.ToString()+") and came up with more moves?? ({0}) > old priority ({1})",nextSolver.Priority, curr.Priority)
+                        Debug.Indent()
+                        Debug.WriteLine("Old board:\n" + Printer.Print(curr.Board))
+                        Debug.WriteLine("New board:\n" + Printer.Print(newBoard))
+                        ()
+                    else
+                        ()
 
-                seq {
-                    let bestSolutions = 
-                        bestMoves
-                        |> Array.Parallel.map apply
-                        |> Seq.concat
-                    yield! bestSolutions
+        let doMoves (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) =
+            let startIndex = !highestIndex
+            [for i in 0..0 do
+                applyMove curr highestIndex moves (startIndex+(i*1<MoveIndex>))
+            ] |> ignore
 
-                    let otherSolutions = 
-                        otherMoves
-                        |> Array.Parallel.map apply
-                        |> Seq.concat
-                    yield! otherSolutions                
-                }
+        if (solver.IsComplete) then
+            [solver] |> List.toSeq
+        else
+            Solver.Initialize(solver)
+            seq {
+                while (queue.Count>0) do
+                    let (pri, currentSolver, moveIndex) as popped = dequeue()
+                    let oldPri = currentSolver.Priority // is pri == s.Pri.. ?
+                
+    //                Debug.WriteLine("("+pri.ToString() + ", " + moveIndex.ToString() + ") " + currentSolver.Board.ToString())
+                    Debug.WriteLine(popped)
+//                    Debug.WriteLine(Printer.Print(currentSolver.Board))
 
+                    if (not (currentSolver.IsValid)) then 
+                        ()
+                    elif (currentSolver.Board.IsComplete) then 
+                        yield currentSolver
+                    else
+                        let moves = currentSolver.Processor.Moves
+                        let highestIndex = ref moveIndex
+
+                        doMoves currentSolver highestIndex moves
+
+                        if (!highestIndex < (moves.Length-1)*1<MoveIndex>) then
+                            pushUpdate (currentSolver,!highestIndex + 1<MoveIndex>)
+            }

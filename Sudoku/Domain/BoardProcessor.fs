@@ -1,177 +1,300 @@
 ﻿namespace Domain
+open System.Collections.Concurrent
+open System.Collections.Generic
+// 81 variables
+// each variable has a domain
+
 
 type BoardProcessor (board:Board) =
 
-    let housesByPosition =         
-        // for each position on the board, get the house
-        let housesByPosition' = 
-            Index.AllPositions 
-            |> Seq.map (fun pos -> 
-                let house = new House(pos, board)
-                (pos,house))
-            |> Map.ofSeq
-        lazy housesByPosition'
+    let isAreaValid (area:Set<Position>) : bool = 
+        let digits:List<int<Dig>> = new List<int<Dig>>()
+        let blankSpaces = ref 0
+        // valid if no digit played twice
+        area
+        |> Set.iter (fun pos ->
+            match (board.At pos) with
+            | Some d -> digits.Add d
+            | None -> blankSpaces := !blankSpaces+1)
+        let uniqueDigits = digits |> Set.ofSeq
+        let total = !blankSpaces + uniqueDigits.Count
+        9 = total
 
-    let isBlank pos =
-        not (board.At pos).IsSome
+    let where : Position [] = Array.init 81 (fun pos -> Position.FromIndex pos)
+//    let cant : Set<int<Dig>> [] = Array.init 81 (fun pos -> Set.empty)
+//    let can : Set<int<Dig>> [] = Array.init 81 (fun pos -> Index.AllDigits)
 
-    let movesExist (house:House) : bool =
-        not house.AvailableDigits.IsEmpty
 
-    let isValid pos (house:House) : bool = 
-        not (isBlank pos) ||
-        (movesExist house)
+    let housesByPosition = 
+        Index.AllPositions 
+        |> Array.ofSeq
+        |> Array.Parallel.map (fun pos -> 
+            let house = new House(pos, board)
+            (pos,house))
+        |> Map.ofArray
 
-    let to_pos (row:int) (column:int) (digit:int) = {Row=row*1<sr>;Col=column*1<sc>}
+    let can' : Set<int<Dig>> [] = Array.init 81 (fun pos -> housesByPosition.[Position.FromIndex pos].DigitsThatCanBePlayedInThisPosition)
+    let required : Set<int<Dig>> [] = Array.init 81 (fun pos -> Set.empty)
 
-    let unfilledPositions (positions:Set<Position>) = 
-        positions |> Set.filter (fun pos -> (board.At pos).IsNone)
+    let isValid =
+        let areaResult = 
+            Index.AllAreas
+            |> Array.forall (fun area -> area |> isAreaValid)
+        let positionResult = 
+            lazy
+                housesByPosition
+                |> Map.toArray
+                |> Array.forall (fun (pos,house:House) -> not house.DigitsThatMayAppearInThisPosition.IsEmpty)
 
-    member x.MovesByPosition (position:Position) : Move seq =
-        (x.DigitsPlayableAt position)
-        |> Set.toSeq
-        |> Seq.map (fun d -> (position, d))
+        areaResult && positionResult.Value
 
-    member x.ToPrioritizedMoveList (map:Map<int<score>,Set<Position>>) : Move seq =
-        let list' = 
-            map
-            |> Map.toList
-            |> List.map (fun (score, positions) ->
-                let a = 
-                    positions
-                    |> Set.fold (fun (result:Move list) position -> 
-                        let movesHere : Move list = 
-                            x.MovesByPosition position
-                            |> List.ofSeq
-                        List.append result movesHere)
-                        []
-                a)
-        list'
-        |> List.concat
-        |> List.toSeq
 
-    member x.HousesByPosition = housesByPosition.Force ()
+    let computeRequiredMoves () = 
+        board.Moves 
+        |> Seq.iter (fun (pos, digit) ->
+            let index = pos.ToIndex
+            let nowCantArea = housesByPosition.[pos].Area
+            ()
+//            cant.[index] <- Set.empty
+//            can.[index] <- Set.empty
+//
+//            nowCantArea
+//            |> Set.iter (fun cantPos ->
+//                let i = cantPos.ToIndex
+//                cant.[i] <- cant.[i].Add digit
+//                can.[i] <- can.[i].Remove digit
+         //   )
+        )
 
-    member x.House (pos:Position) : House = 
-        x.HousesByPosition.[pos]
+        Index.AllAreas
+        |> Array.map (fun (area:Set<Position>) -> area |> Set.filter (fun item -> (board.At item).IsNone))
+        |> Array.iter (fun (area:Set<Position>) ->            
 
-    /// Board is valid if something can be played at every position
-    member x.Validate () : bool =
-        x.HousesByPosition |> Map.forall isValid
-
-    /// Higher score = worse
-    member x.ScorePosition (position:Position) : int<score> =        
-        let playable = x.DigitsPlayableAt position |> Set.toArray
-        match playable with
-        | x when not (isBlank position) -> System.Int32.MaxValue * 1<score>
-        | [||] -> 0<score>
-        | xs -> xs.Length * 1<score>
-
-    member x.Score () : Map<int<score>, Set<Position>> =
-        let unfilled : Set<Position> = Index.AllPositions |> unfilledPositions
-        let scoreMap = 
-            unfilled
-            |> Set.toSeq
-            |> Seq.groupBy (fun p -> x.ScorePosition p)
-            |> Seq.map (fun (score, seqOfPositions) -> (score, seqOfPositions |> Set.ofSeq))
-            |> Map.ofSeq
-        scoreMap        
-
-    member x.IsBlank (row:int) (column:int) (digit:int) =
-        isBlank (to_pos row column digit)
-
-    member x.CanPlay (row:int) (column:int) (digit:int) = 
-        let pos = to_pos row column digit
-        let blank = isBlank pos
-        let house' = x.House pos
-        let digitIsAvailable = 
-            house'.AvailableDigits.Contains(digit*1<sd>)
-        blank && digitIsAvailable
-
-    member x.PositionsByDigit (area:Set<Position>) : Map<int<sd>,Set<Position>> =
-        // get Map<Position,Set<int<sd>>
-        // transform to Map<int<sd>,Set<Position>>
-        // What's that operation called?!
-        area 
-        |> Seq.map (fun pos -> 
-            (x.House pos).Choices
-            |> Seq.map (fun digit -> (digit, pos)))
-        |> Seq.concat
-        |> Seq.groupBy (fun (d,p) -> d)
-        |> Map.ofSeq
-        |> Map.map (fun d dps -> 
-            dps
-            |> Seq.map (fun (d,p) -> p)
-            |> Set.ofSeq)
-
-    member x.RequiredMovesByArea (area:Set<Position>) : Set<Move> =
-        let unfilledArea = area |> unfilledPositions
-        let unneededDigits = (area - unfilledArea) |> Set.map (fun pos -> (board.At pos).Value)
-        let digitMap = 
-            x.PositionsByDigit unfilledArea
-            |> Map.filter (fun d ps -> not (unneededDigits.Contains d))
-        let digitsWithOneMove = 
-            digitMap
-            |> Map.filter (fun d (poss:Set<Position>) -> 1 = Set.count poss)
-        let moveTuples = 
-            digitsWithOneMove
-            |> Map.map (fun (digit:int<sd>) (moves:Set<Position>) -> 
-                moves 
-                |> Set.map (fun (position:Position) -> (position,digit))
-                )
-            |> Map.toSeq
-            |> Seq.map (fun (d,tuples) -> tuples)
-            |> Seq.concat
-            |> Set.ofSeq
-            
-        moveTuples
-        // foreach, if only 1 choice,  
-
-    member x.IsAreaValid (area:Set<Position>) : bool =
-        let availableDigits = 
             area 
-            |> Set.fold (fun (state:Set<int<sd>>) pos -> 
-                match board.At pos with
-                | None -> state
-                | Some d -> state.Remove d) 
-               Index.AllDigits
-            |> Set.count
+            |> Set.iter (fun (here:Position) ->
 
-        let availablePositions = 
-            area
-            |> unfilledPositions
-            |> Set.count
+                // for every other position in the area
+                // if can move there, remove it from can move[here] 
 
-        availableDigits = availablePositions
+                let iHere = here.ToIndex
 
-    member x.IsValid () : bool =
-        let a = Index.AllAreas
-        let result = 
-            Index.AllAreas
-            |> Array.forall (fun area -> area |> x.IsAreaValid)
-        result
+                let cantMoveHere = housesByPosition.[here].CantPlay
+                can'.[iHere] <- can'.[iHere] - cantMoveHere
 
-    member x.RequiredMoves : Set<Move> =
-        let r = x.RequiredMovesByArea
-        // union the results of every house
-        let result = 
-            Index.AllAreas
-            |> Array.map r
-            |> Set.unionMany
-        result
+                area
+                |> Set.iter (fun (there:Position) ->
+                    if (here <> there) then
+                        let thereMoves = housesByPosition.[there].DigitsThatCanBePlayedInThisPosition                      
+                        can'.[iHere] <- can'.[iHere] - thereMoves
+                    else ()
+                )
 
-    member x.DigitsPlayableAt (pos:Position) : Set<int<sd>> = 
+                if (can'.[iHere].Count = 1) then
+                    required.[iHere] <- required.[iHere] + can'.[iHere]
+            )
+        )
+
+        let requirements = 
+            Array.zip where required
+            |> Array.filter (fun (p,s) -> Set.empty <> s)
+            |> Array.map (fun (p,s) -> (p,s.MinimumElement))
+        
+        let requirementsMap : Map<Position,int<Dig>> = 
+            requirements
+            |> Map.ofArray
+        requirementsMap
+
+    let requiredMoves =
+        match isValid with
+        | true ->
+            computeRequiredMoves()
+        | false -> Map.empty
+
+    let digitsRemaining:ConcurrentDictionary<int<Dig>,ConcurrentStack<int<Dig>>> =
+        let kvps:KeyValuePair<int<Dig> , ConcurrentStack<int<Dig>>> seq = 
+            let makeStak (d:int<Dig>) = 
+                new System.Collections.Generic.KeyValuePair<int<Dig>,ConcurrentStack<int<Dig>>>
+                    (d, new ConcurrentStack<int<Dig>>([for x in 1..9 -> d] :> int<Dig> seq))
+            let p = Index.AllDigits |> Array.map (fun digit -> makeStak digit)
+            p |> Array.toSeq
+        let dict = new ConcurrentDictionary<int<Dig>,ConcurrentStack<int<Dig>>>(kvps)
+        dict
+
+    let canIGetADigit digit : bool =
+        let mutable digitRef = 0<Dig>
+        digitsRemaining.[digit].TryPop( ref digitRef )
+
+    let initializeDigitsRemaining =
+        Index.AllPositions 
+        |> Set.iter (fun pos ->
+            match board.At pos with
+            | Some digit -> canIGetADigit digit |> ignore
+            | _ -> ())
+
+    let scoreDigit digit : int<score> =
+        digitsRemaining.[digit].Count * 1<score>
+
+    let scorePotentials (position:Position,digits:Set<int<Dig>>) =
+        let options = digits.Count * 1<score>
+        (options, (position, digits))
+
+    let potentialMoves : Map<Position,Set<int<Dig>>> =
+        match isValid with
+        | true -> 
+            let requiredPotentials =
+                requiredMoves
+                |> Map.toArray
+                |> Array.map (fun (p, d) -> (p,[d]|>Set.ofList))
+            let potentials' = 
+                Index.AllPositions
+                |> Set.toArray
+                |> Array.map (fun pos -> (pos,housesByPosition.[pos].DigitsThatCanBePlayedInThisPosition))
+            let potentials = 
+                potentials'
+                |> Array.filter (fun (p,s:Set<int<Dig>>) -> 
+                    (not s.IsEmpty) && (board.At p).IsNone)
+                |> Array.append requiredPotentials
+                |> Map.ofArray
+            potentials
+        | false -> Map.empty
+
+    let computeMovesByScore () =
+        let ``map (position,digit) to score->Move[]`` = ()
+
+        let setToMoveArray (position:Position, s:Set<int<Dig>>) : Move[] =
+            s
+            |> Set.toArray
+            |> Array.map (fun (digit:int<Dig>) -> (position,digit))
+                
+        let mapScoreToMoveArray scores :Map<int<score>,Move[]> =
+            let flatten = 
+                scores 
+                |> Array.map (fun (score, (p,s:Set<int<Dig>>)) -> 
+                    (score, setToMoveArray (p,s))
+                )
+            let flattenn = 
+                flatten 
+                |> Array.map (fun (score:int<score>, moves) -> moves |> Array.map (fun move -> (score, move)))
+                |> Array.concat
+            let flattennn = 
+                flattenn
+                |> Seq.groupBy (fun (score, move) -> score)
+                |> Seq.toArray
+                |> Array.map (fun (score, scoreMoves) -> 
+                    (score, 
+                        scoreMoves 
+                        |> Seq.map (fun (score, move:Move) -> move) 
+                        |> Array.ofSeq))
+            flattennn |> Map.ofArray
+
+        let scores =
+            potentialMoves
+            |> Map.toArray 
+            |> Array.map scorePotentials
+            |> Set.ofArray
+            |> Set.toArray
+                
+        mapScoreToMoveArray scores
+
+    let movesByScore : Map<int<score>,Move[]> = 
+        match isValid with
+        | true ->
+            computeMovesByScore()
+        | false -> Map.empty
+
+    let movesInOrder = 
+        movesByScore
+        |> Map.toArray 
+        |> Array.map (fun (score, moves) -> 
+            let m = moves
+            moves |> Array.sortInPlaceBy (fun (pos,digit) -> 
+                        ((-1) * (scoreDigit digit), pos))
+            moves)
+        |> Array.concat
+
+    let boardScore = movesInOrder.Length * 1<score>
+
+    let requiredMoveByPosition : Map<Position,int<Dig>> = 
+        requiredMoves
+
+    let to_pos (row:int) (column:int) = 
+        new Position(row*1<SRow>,column*1<SCol>)
+        
+    let cantPlay (position:Position) =
+        if (board.At position).IsSome then
+            Index.AllDigitSet
+        else
+            let house = housesByPosition.[position]
+            house.CantPlay
+
+    let requiredDigitAt (position:Position) : Set<int<Dig>> = 
+        if (requiredMoveByPosition.ContainsKey position) then
+            if (board.At position).IsSome then
+                failwith "more bad mojo"
+            else
+                Set.empty.Add requiredMoveByPosition.[position]
+        else
+            Set.empty
+
+    let digitsPlayableAt (pos:Position) : Set<int<Dig>> = 
         match (board.At pos) with
         | None -> 
-            let required = x.RequiredMoves |> Set.filter (fun (p,d) -> p=pos)
-            if (Set.isEmpty required) then
-                let h = x.House pos
-                h.AvailableDigits
+            // if mustPlay is empty then canPlay
+            let required = requiredDigitAt pos
+            if (required.IsEmpty) then
+                let h = housesByPosition.[pos]
+                h.DigitsThatCanBePlayedInThisPosition
             else
-                required |> Set.fold (fun state (p,d) -> state.Add d) Set.empty
+                required
         | Some x -> Set.empty
 
-    member x.PrintAvailableDigits (digits:Set<int<sd>>) =
+    let movesByPosition (position:Position) : Move [] =
+        match isValid with
+        | true ->
+            let result = 
+                (digitsPlayableAt position)
+                |> Seq.map (fun d -> (position, d))
+            result |> Seq.toArray
+        | _ -> [||]
+
+    let scoreByPos pos = 
+        (digitsPlayableAt pos).Count * 1<score>
+
+    let _requiredMoves =
+        let required = requiredMoves |> Map.toArray
+        if (movesByScore.ContainsKey(1<score>)) then
+            movesByScore.[1<score>] |> Seq.toArray |> (Array.append required)
+        else
+            required
+
+    member x.House (pos:Position) : House = 
+        housesByPosition.[pos]
+
+    member x.IsBlank (row:int) (column:int) =
+        (board.At (to_pos row column)).IsNone
+
+    member x.CanPlay (row:int) (column:int) (digit:int) = 
+        let pos = to_pos row column
+        let blank = x.IsBlank row column
+        blank &&
+            ((fun () ->
+                (x.DigitsPlayableAt(pos)).Contains(digit*1<Dig>))())
+
+    member x.MovesByPosition (position:Position) : Move [] = movesByPosition position
+    member x.DigitsPlayableAt (pos:Position) : Set<int<Dig>> = digitsPlayableAt pos
+
+    member x.Score = movesByScore
+
+    member x.RequiredMoves() = _requiredMoves
+
+    member x.Moves = 
+        movesInOrder
+
+    member x.IsValid () : bool = isValid
+
+    member x.NumericScore : int<score> = boardScore
+        
+    member x.PrintAvailableDigits (digits:Set<int<Dig>>) =
         let sb = new System.Text.StringBuilder()
         let chars = 
             seq {
@@ -188,6 +311,6 @@ type BoardProcessor (board:Board) =
                 let s = 
                     match board.At pos with
                     | Some x -> "->" + x.ToString() + "<-"
-                    | None -> x.PrintAvailableDigits (x.HousesByPosition.[pos].AvailableDigits)
+                    | None -> x.PrintAvailableDigits (x.House pos).DigitsThatMayAppearInThisPosition
                 s.PadRight(9)                   
             )

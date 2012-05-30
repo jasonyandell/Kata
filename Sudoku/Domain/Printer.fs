@@ -13,7 +13,8 @@ type Printer () =
                     if col>0 && (col%3=0) then 
                         yield '|'
                         yield ' ' 
-                    let s:string = lookup {Position.Row = row*1<sr>; Col=col*1<sc>}
+                    let pos = new Position(row*1<SRow>, col*1<SCol>)
+                    let s:string = lookup pos
                     yield! s
                     yield ' '
                 yield '\n'

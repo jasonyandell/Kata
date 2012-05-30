@@ -4,59 +4,56 @@ type House (pos:Position, board:Board) =
     let rowArea = Index.Row pos.Row
     let colArea = Index.Column pos.Col
     let boxArea = Index.Box pos
+    let areas = [boxArea; rowArea; colArea;] |> Set.ofList
 
-    let makeArea (position:Position) = 
-        let area = Seq.concat [rowArea; colArea; boxArea]
-        area |> Set.ofSeq
+    let unionArea =
+        let area' = Seq.concat [boxArea; rowArea; colArea;]
+        area' |> Set.ofSeq
 
-    let area = makeArea pos
+    static let alreadyPlayed (board:Board ref) (area:Set<Position> ref) : Set<int<Dig>> = 
+        // foreach pos in area if unavailable@pos, append to unavailable
+        (!area)
+        |> Set.toArray
+        |> Array.choose (fun pos -> (!board).At pos)
+        |> Set.ofArray
 
     let unavailable = 
-        lazy
-            // foreach pos in area if unavailable@pos, append to unavailable
-            seq { 
-                for pos in area do
-                    match (board.At pos) with
-                    | Some digit -> yield digit
-                    | _ -> ()
-            } |> Set.ofSeq
+        match (board.At pos) with
+        | Some digit -> Index.AllDigitSet
+        | None -> 
+            alreadyPlayed (ref board) (ref unionArea)
 
     let availableDigits = 
         lazy
             match (board.At pos) with
             | Some digit -> Set.empty
             | None ->
-                let unavailable' = unavailable.Force()
-                Set.difference 
-                    Board.AllDigits 
-                    unavailable'
+                Set.difference Board.AllDigits unavailable
+ 
+    static member AlreadyPlayed board area = alreadyPlayed board area
 
-    /// Not sure why I need this any more
-    member private x.AvailableMoves =
-        seq { 
-            for pos in area do
-                match (board.At pos) withle
-                | Some digit -> ()
-                | _ -> yield pos
-        } |> Set.ofSeq
-        
-    member x.AvailableDigits = availableDigits.Value
+    member x.DigitsThatCanBePlayedInThisPosition with get () = availableDigits.Value
 
-    member internal x.Choices = 
+    member x.DigitsThatMayAppearInThisPosition = 
         match board.At pos with
         | Some x -> [x] |> Set.ofSeq
-        | None -> 
-            x.AvailableDigits
+        | None -> x.DigitsThatCanBePlayedInThisPosition
+
+    member x.CantPlay with get() = unavailable
 
     member x.Row = rowArea
     member x.Column = colArea
     member x.Box = boxArea
 
+    member x.Areas = areas    
+    member x.Area = Set.unionMany areas
+
     override x.ToString() =
         Printer.PrintTemplate 
             board
             (fun pos -> 
-                if area.Contains pos then "#"
+                if unionArea.Contains pos then "#"
                 else "*")
 
-
+    member x.MovesExist = not (x.DigitsThatCanBePlayedInThisPosition.IsEmpty)
+        

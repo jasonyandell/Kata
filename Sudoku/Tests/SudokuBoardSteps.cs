@@ -54,6 +54,7 @@ namespace Tests
                     board = board.Play(d, y, x);
                 }
             }
+
             return board;
         }
 
@@ -138,13 +139,13 @@ namespace Tests
             split.Start();
             Debug.WriteLine(Printer.Print(_board));
             int solutionCount = 0, last = 0;
-            var solver = new Solver(_board);
-            foreach (var solution in solver.Solve())
+            var solver = Solver.Create(_board);
+            foreach (var solution in Solver.Solve(solver))
             {
-                sample = solution;
+                sample = solution.Board;
                 if (solutionCount < 10)
                 {
-                    Debug.WriteLine(Printer.Print(solution));
+                    Debug.WriteLine(Printer.Print(solution.Board));
                     Debug.WriteLine("");
                 }
                 solutionCount++;
@@ -153,27 +154,29 @@ namespace Tests
                 var time = split.ElapsedMilliseconds * 1.0 / 1000.0;
                 Debug.WriteLine("{0} boards / {1} seconds. Avg: {2}", solutionCount,
                                 time, (solutionCount - last) * 1.0 / time);
-                if (solutionCount % 10000 == 0) Debug.WriteLine(Printer.Print(solution));
+                if (solutionCount % 10000 == 0) Debug.WriteLine(Printer.Print(solution.Board));
                 last = solutionCount;
                 split.Restart();
             }
             watch.Stop();
             var ts = watch.Elapsed;
             Debug.WriteLine("Complete.\n{0} solutions in {1}. Avg:{2}solutions/sec", solutionCount, ts, solutionCount * 1.0 / ts.TotalSeconds);
-            Debug.WriteLine(Printer.Print(sample));
+            Debug.WriteLine(sample == null ? "No solution found" : Printer.Print(sample));
+            Assert.Greater(solutionCount,0);
         }
 
         [When(@"the solver evaluates the board")]
         public void TheSolverEvaluatesTheBoard()
         {
-            _solver = new Solver(_board);
+            _solver = Solver.Create(_board);
         }
 
         [When(@"the solver makes the required moves")]
         public void TheSolverMakesTheRequiredMoves()
         {
-            _board = _solver.MakeRequiredMoves();
-            _solver = new Solver(_board);
+            _solver = _solver.MakeRequiredMoves();
+            _board = _solver.Board;
+
             Debug.WriteLine("Board after required moves made:\n" + Printer.Print(_board));
         }
 
@@ -188,7 +191,7 @@ namespace Tests
         [Then(@"I can place (.*) digits at (.*),(.*)")]
         public void ICanPlaceNDigitsAtRowCol(int n, int row, int col)
         {
-            var pos = new Position(row, col);
+            var pos = new Position(row,col);
             var playableDigits = _solver.DigitsPlayableAt(pos).ToList();
             
             var list = new StringBuilder();
