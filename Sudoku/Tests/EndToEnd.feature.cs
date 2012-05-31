@@ -111,18 +111,54 @@ this.ScenarioSetup(scenarioInfo);
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Can take board input from scenario file")]
-        public virtual void CanTakeBoardInputFromScenarioFile()
+        [NUnit.Framework.DescriptionAttribute("Solve a hard problem from the internet")]
+        public virtual void SolveAHardProblemFromTheInternet()
         {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Can take board input from scenario file", ((string[])(null)));
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve a hard problem from the internet", ((string[])(null)));
 #line 18
 this.ScenarioSetup(scenarioInfo);
 #line hidden
 #line 19
+ testRunner.Given("this board", ". . . . 6 5 . . .\r\n6 . 9 4 . 3 . . 7\r\n. . . 2 . . . 4 .\r\n. . 1 . . . . 7 6\r\n7 . ." +
+                    " . 3 . . . 8\r\n3 8 . . . . 2 . .\r\n. 6 . . . 4 . . .\r\n1 . . 3 . 7 9 . 4\r\n. . . 8 5" +
+                    " . . . .", ((TechTalk.SpecFlow.Table)(null)));
+#line 31
+ testRunner.Then("solve it");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Solve an extreme problem from the internet")]
+        public virtual void SolveAnExtremeProblemFromTheInternet()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Solve an extreme problem from the internet", ((string[])(null)));
+#line 33
+this.ScenarioSetup(scenarioInfo);
+#line hidden
+#line 34
+ testRunner.Given("this board", "2 . . . 8 . . 7 6\r\n. . . . . . 4 . .\r\n. . . 2 . . 5 . 8\r\n5 . . 1 . . 8 6 .\r\n. . 7" +
+                    " 6 . 9 3 . .\r\n. 6 2 . . 7 . . 4\r\n3 . 6 . . 1 . . .\r\n. . 1 . . . . . .\r\n8 5 . . 6" +
+                    " . . . 3", ((TechTalk.SpecFlow.Table)(null)));
+#line 46
+ testRunner.Then("solve it");
+#line hidden
+            this.ScenarioCleanup();
+        }
+        
+        [NUnit.Framework.TestAttribute()]
+        [NUnit.Framework.DescriptionAttribute("Can take board input from scenario file")]
+        public virtual void CanTakeBoardInputFromScenarioFile()
+        {
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Can take board input from scenario file", ((string[])(null)));
+#line 48
+this.ScenarioSetup(scenarioInfo);
+#line hidden
+#line 49
  testRunner.Given("this board", "4 . . . . . 8 . 5\r\n. 3 . . . . . . .\r\n. . . 7 . . . . .\r\n. 2 . . . . . 6 .\r\n. . ." +
                     " . 8 . 4 . .\r\n. 4 . . 1 . . . .\r\n. . . 6 . 3 . 7 .\r\n5 . 3 2 . . . . .\r\n1 . 4 . ." +
                     " . . . .", ((TechTalk.SpecFlow.Table)(null)));
-#line 31
+#line 61
  testRunner.Then("solve it");
 #line hidden
             this.ScenarioCleanup();

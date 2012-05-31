@@ -203,14 +203,17 @@ type BoardProcessor (board:Board) =
         | false -> Map.empty
 
     let movesInOrder = 
-        movesByScore
-        |> Map.toArray 
-        |> Array.map (fun (score, moves) -> 
-            let m = moves
-            moves |> Array.sortInPlaceBy (fun (pos,digit) -> 
-                        ((-1) * (scoreDigit digit), pos))
-            moves)
-        |> Array.concat
+        match isValid with
+        | true ->
+            movesByScore
+            |> Map.toArray 
+            |> Array.map (fun (score, moves) -> 
+                let m = moves
+                moves |> Array.sortInPlaceBy (fun (pos,digit) -> 
+                            ((1) * (scoreDigit digit), pos))
+                moves)
+            |> Array.concat
+        | false -> [||]
 
     let boardScore = movesInOrder.Length * 1<score>
 

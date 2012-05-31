@@ -13,64 +13,40 @@ open System.Diagnostics
 open System.Linq
 
 [<Measure>] type MoveIndex
-[<Measure>] type ScoreSoFar
+[<Measure>] type CostSoFar
 
 type Solver private (board:Board) =
+
+    static let costPerMove = 50
 
     let _processor = new BoardProcessor(board)
 
     //let priority = _processor.NumericScore
     
     static let foundBoards = new ConcurrentBag<string>()
-    static let queue = new SortedDictionary<int<score>*string,Solver*int<MoveIndex>>()
+    static let queue = new SortedDictionary<int<score>*int<CostSoFar>*string,Solver*int<MoveIndex>>()
 
-    static let getScore(s:Solver,index:int<MoveIndex>,str:string) =
-        let moves:Move[] = s.Processor.Moves
-        let (posAtIndex:Position, digitAtIndex:int<Dig>) = moves.[index/1<MoveIndex>]
 
-        let movesAtIndex = (s.House posAtIndex).DigitsThatCanBePlayedInThisPosition.Count
-
-       // let score = movesAtIndex * (s.Processor.Moves.Count)
-
-//        let moveCountAsFloat : float = float movesAtIndex
-//        let percentWrong = 1.0 - (1.0 / moveCountAsFloat)
-//        let nscore = System.Convert.ToInt32( percentWrong * (float s.Priority) ) * 1<score>
-//
-//        queue.Any(fun kvp -> 
-//            let (score, idx, boardKey) = kvp.Key
-//            boardKey = str) 
-//        |> ignore
-
-        // NOTE: Real cost so far is sum(MoveIndex) for each move made so far, starting from original board
-        let ``cost so far`` = index / 1<MoveIndex>
-        let ``cost of this move`` = movesAtIndex
-        let ``estimated cost to finish`` = 81 - s.Board.Moves.Count
-        
-        let score = 
-            ``cost so far`` + ``cost of this move`` + ``estimated cost to finish``
-
-        score * 1<score>
-
-    static let enqueue (str:string) (s:Solver,index:int<MoveIndex>) = 
+    static let enqueue (costSoFar:int<CostSoFar>,str:string) (s:Solver,index:int<MoveIndex>) = 
         if (not (foundBoards.Contains(str))) then
             let len = foundBoards.Count
             ()
         else
             ()
 
-        let nscore = getScore (s, index, str)
+        let nscore = s.getScore (costSoFar, index)
 
-        queue.Add(( nscore, str), (s,index))
+        queue.Add(( nscore, costSoFar, str), (s,index))
 //        queue.AddOrUpdate(pri, s, (fun (key:int<score>) (value:Solver*int<MoveIndex>) -> value))
   //      |> ignore
 
     static let dequeue () = 
-        let (currScore:int<score>, boardKey:string) as firstKey = queue.Keys.First()
+        let (currScore:int<score>, costSoFar:int<CostSoFar>, boardKey:string) as firstKey = queue.Keys.First()
         let (solver:Solver,moveIndex) = queue.Values.First()
         queue.Remove(firstKey) |> ignore
-        (currScore, solver, moveIndex)
+        (costSoFar, solver, moveIndex)
 
-    static let pppush (boardKey:string) (solver:Solver, idx:int<MoveIndex>) =
+    static let pppush (costSoFar:int<CostSoFar>, boardKey:string) (solver:Solver, idx:int<MoveIndex>) =
 //        if (pri = 0<score>) then ()
 //        else
 //            if (queue.ContainsKey (pri,boardKey)) then
@@ -82,15 +58,15 @@ type Solver private (board:Board) =
 ////                else
 ////                    push (pri+1<score>) s
 //            else
-                enqueue (boardKey) (solver, idx)
+                enqueue (costSoFar, boardKey) (solver, idx)
 
-    static let ppush (solver:Solver,index) =
-        pppush (solver.Board.Key) (solver, index)
+    static let ppush (costSoFar,solver:Solver,index) =
+        pppush (costSoFar, solver.Board.Key) (solver, index)
 
-    static let pushUpdate (solver:Solver,index) =
-        ppush (solver,index)
+    static let pushUpdate (costSoFar:int<CostSoFar>,solver:Solver,index) =
+        ppush (costSoFar,solver,index)
 
-    static let addNew (solver:Solver) : Solver option =
+    static let addNew (costSoFar:int<CostSoFar>, costOfThisMove:int<MoveIndex>, solver:Solver) : Solver option =
         if (foundBoards.Contains(solver.Board.Key)) then
             None
         else
@@ -98,7 +74,7 @@ type Solver private (board:Board) =
             if (not (foundBoards.Contains(finalBoard.Key))) then
                 foundBoards.Add(finalBoard.Key)
             if (solver.IsValid) then
-                ppush (solver, 0<MoveIndex>)
+                ppush (costSoFar + costPerMove*(costOfThisMove/1<MoveIndex> + 1)*1<CostSoFar>, solver, 0<MoveIndex>)
                 Some solver
             else
                 None
@@ -110,7 +86,7 @@ type Solver private (board:Board) =
             initialized <- true
             foundBoards.Add(solver.Board.Key)
             if (solver.IsValid && (not solver.Board.IsComplete)) then
-                ppush (solver, 0<MoveIndex>)
+                ppush (0<CostSoFar>, solver, 0<MoveIndex>)
     
     override x.ToString() : string =
         x.Board.Key
@@ -159,7 +135,7 @@ type Solver private (board:Board) =
 
     static member Solve(solver:Solver) : Solver seq =        
 
-        let applyMove (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) (index:int<MoveIndex>) : Solver seq =
+        let applyMove (costSoFar:int<CostSoFar>) (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) (index:int<MoveIndex>) : Solver seq =
             let typelessIndex = index/1<MoveIndex>
             if (typelessIndex < moves.Length) then
                 highestIndex := index
@@ -168,7 +144,7 @@ type Solver private (board:Board) =
                 if (veryTemporary.Processor.IsValid()) && (veryTemporary.Board.IsComplete) then
                     seq { yield veryTemporary }
                 else
-                    match (addNew veryTemporary) with
+                    match (addNew (costSoFar,!highestIndex,veryTemporary)) with
                     | None -> Seq.empty  // this board has been added before
                     | Some nextSolver ->
                         let newBoard = nextSolver.Board
@@ -183,11 +159,11 @@ type Solver private (board:Board) =
             else
                 Seq.empty
 
-        let doMoves (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) : Solver seq =
+        let doMoves (costSoFar:int<CostSoFar>) (curr:Solver) (highestIndex:int<MoveIndex> ref) (moves:Move[]) : Solver seq =
             let startIndex = !highestIndex
             seq {
                 for i in 0..0 do
-                   yield! applyMove curr highestIndex moves (startIndex+(i*1<MoveIndex>))
+                   yield! applyMove costSoFar curr highestIndex moves (startIndex+(i*1<MoveIndex>))
             }
 
         if (solver.IsComplete) then
@@ -196,7 +172,7 @@ type Solver private (board:Board) =
             Solver.Initialize(solver)
             seq {
                 while (queue.Count>0) do
-                    let (pri, currentSolver, moveIndex) as popped = dequeue()
+                    let (costSoFar, currentSolver, moveIndex) as popped = dequeue()
                 
     //                Debug.WriteLine("("+pri.ToString() + ", " + moveIndex.ToString() + ") " + currentSolver.Board.ToString())
                     Debug.WriteLine(popped)
@@ -210,8 +186,24 @@ type Solver private (board:Board) =
                         let moves = currentSolver.Processor.Moves
                         let highestIndex = ref moveIndex
 
-                        yield! doMoves currentSolver highestIndex moves
+                        yield! doMoves costSoFar currentSolver highestIndex moves
 
                         if (!highestIndex < (moves.Length-1)*1<MoveIndex>) then
-                            pushUpdate (currentSolver,!highestIndex + 1<MoveIndex>)
+                            pushUpdate (costSoFar,currentSolver,!highestIndex + 1<MoveIndex>)
             }
+
+
+    member private x.getScore(costSoFar:int<CostSoFar>,index:int<MoveIndex>) =
+        let ``cost of this move`` = index/1<MoveIndex> * costPerMove
+        let ``estimated cost to finish`` = (81 - board.Moves.Count) * 20
+
+        // NOTE: Real cost so far is sum(MoveIndex) for each move made so far, starting from original board
+        let ``cost so far`` = costSoFar / 1<CostSoFar>
+        
+        let nscore = 
+            ``cost so far`` + ``cost of this move`` + ``estimated cost to finish``
+
+        let retVal = nscore * 1<score>
+
+        retVal
+
