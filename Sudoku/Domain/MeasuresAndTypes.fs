@@ -31,7 +31,7 @@ type Position(row:int<SRow>,col:int<SCol>) =
     interface System.IComparable with
         member x.CompareTo(o:obj) =
             if (o :? Position) then
-                (x.GetHashCode() - o.GetHashCode())
+                (index - o.GetHashCode())
             else
                 -1
 

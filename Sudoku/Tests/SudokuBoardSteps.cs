@@ -142,13 +142,14 @@ namespace Tests
             var solver = Solver.Create(_board);
             foreach (var solution in Solver.Solve(solver))
             {
+                solutionCount++;
                 sample = solution.Board;
+                break;
                 if (solutionCount < 10)
                 {
                     Debug.WriteLine(Printer.Print(solution.Board));
                     Debug.WriteLine("");
                 }
-                solutionCount++;
                 if (solutionCount % 1000 != 0) continue;
                 split.Stop();
                 var time = split.ElapsedMilliseconds * 1.0 / 1000.0;
