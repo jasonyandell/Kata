@@ -93,12 +93,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>EndToEnd.feature</DependentUpon>
     </Compile>
-    <Compile Include="PriorityQueue.feature.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PriorityQueue.feature</DependentUpon>
-    </Compile>
-    <Compile Include="PriorityQueueSteps.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Solver.feature.cs">
       <AutoGen>True</AutoGen>
@@ -121,10 +115,6 @@
       <LastGenOutput>EndToEnd.feature.cs</LastGenOutput>
     </None>
     <None Include="packages.config" />
-    <None Include="PriorityQueue.feature">
-      <Generator>SpecFlowSingleFileGenerator</Generator>
-      <LastGenOutput>PriorityQueue.feature.cs</LastGenOutput>
-    </None>
     <None Include="Solver.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>Solver.feature.cs</LastGenOutput>

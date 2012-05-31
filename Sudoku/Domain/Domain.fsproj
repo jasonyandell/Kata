@@ -81,9 +81,6 @@
     <Compile Include="Index.fs" />
     <Compile Include="House.fs" />
     <Compile Include="BoardProcessor.fs" />
-    <Compile Include="PositionData.fs" />
-    <Compile Include="Mover.fs" />
-    <Compile Include="PriorityQueue.fs" />
     <Compile Include="Solver.fs" />
     <Compile Include="Search.fs" />
     <Compile Include="BoardExtensions.fs" />

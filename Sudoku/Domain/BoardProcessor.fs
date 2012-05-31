@@ -21,9 +21,6 @@ type BoardProcessor (board:Board) =
         9 = total
 
     let where : Position [] = Array.init 81 (fun pos -> Position.FromIndex pos)
-//    let cant : Set<int<Dig>> [] = Array.init 81 (fun pos -> Set.empty)
-//    let can : Set<int<Dig>> [] = Array.init 81 (fun pos -> Index.AllDigits)
-
 
     let housesByPosition = 
         Index.AllPositions 
@@ -55,15 +52,6 @@ type BoardProcessor (board:Board) =
             let index = pos.ToIndex
             let nowCantArea = housesByPosition.[pos].Area
             ()
-//            cant.[index] <- Set.empty
-//            can.[index] <- Set.empty
-//
-//            nowCantArea
-//            |> Set.iter (fun cantPos ->
-//                let i = cantPos.ToIndex
-//                cant.[i] <- cant.[i].Add digit
-//                can.[i] <- can.[i].Remove digit
-         //   )
         )
 
         Index.AllAreas
